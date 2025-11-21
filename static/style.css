@@ -1,0 +1,899 @@
+/* Importação da fonte Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap' );
+
+/* Reset e configurações base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: #1f2937; /* slate-800 */
+    background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%); /* slate-50 to blue-100 */
+    min-height: 100vh;
+}
+
+/* Adicione este bloco ao final do seu arquivo style.css */
+
+#login-bg-gif {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50% );
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: 0; /* Fica atrás de todo o conteúdo */
+    object-fit: cover; /* Garante que o GIF cubra todo o espaço sem distorcer */
+}
+
+ 
+/* ================================================================= */
+/*  EFEITO DE BRILHO CONTÍNUO PARA A LOGO DA SIDEBAR                 */
+/* ================================================================= */
+
+/* Container da logo */
+.logo-container {
+    position: relative;
+    overflow: hidden;
+}
+
+/* O elemento de brilho (pseudo-elemento ::before) */
+.logo-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    
+    /* O gradiente cônico que forma o brilho */
+    background: conic-gradient(
+        transparent,
+        transparent,
+        #8b5cf6, /* Roxo */
+        #ec4899, /* Rosa */
+        #f59e0b, /* Laranja */
+        transparent,
+        transparent
+    );
+    
+    /* Animação: faz o brilho girar */
+    animation: rotate-glow 10s infinite;
+    
+    /* ALTERAÇÃO PRINCIPAL: O brilho agora começa e permanece sempre visível */
+    opacity: 1; 
+}
+
+/* A imagem da logo em si, garantindo que ela fique na frente do brilho */
+.logo-container img {
+    position: relative;
+    z-index: 1;
+}
+
+/* A animação que faz o gradiente girar (permanece a mesma) */
+@keyframes rotate-glow {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+
+
+
+
+/* Sidebar */
+.sidebar {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-hidden {
+    transform: translateX(-100%);
+}
+
+/* Animações */
+.fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+}
+
+/* Containers de tabela e logs */
+.table-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb; /* gray-200 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f5f9; /* slate-100 */
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1; /* slate-300 */
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; /* slate-400 */
+}
+
+.log-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+#logs-system.log-container {
+    max-height: 600px;
+    background-color: #111827; /* gray-900 */
+}
+
+#logs-system::-webkit-scrollbar-track {
+    background: #1f2937; /* gray-800 */
+}
+
+#logs-system::-webkit-scrollbar-thumb {
+    background: #4ade80; /* green-400 */
+}
+
+/* Tooltips */
+.tooltip {
+    position: relative;
+}
+
+.tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937; /* gray-800 */
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Botões com efeitos */
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+}
+
+button:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+}
+
+/* Inputs e Selects com foco melhorado */
+input, select, textarea {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #4f46e5; /* indigo-600 */
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+/* Cards de métricas */
+.metric-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Tabelas estilizadas */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+table thead tr {
+    background-color: #f9fafb; /* gray-50 */
+}
+
+table th {
+    font-weight: 600;
+    color: #4b5563; /* gray-600 */
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #f9fafb; /* gray-50 */
+}
+
+table tbody tr:hover {
+    background-color: #f3f4f6; /* gray-100 */
+}
+
+/* Itens de navegação na Sidebar */
+.nav-item {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+    background-color: #374151; /* gray-700 */
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 70%;
+    background: #4f46e5; /* indigo-600 */
+    border-radius: 0 4px 4px 0;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item:hover::before {
+    width: 4px;
+}
+
+/* Melhorias para acessibilidade */
+:focus-visible {
+    outline: 2px solid #4f46e5; /* indigo-600 */
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 50;
+    }
+    
+    .sidebar:not(.sidebar-hidden) {
+        transform: translateX(0);
+    }
+    
+    .md\:ml-72 {
+        margin-left: 0 !important;
+    }
+}
+
+
+/* Estilos para cards de pedidos com imagem de fundo */
+.pedido-card {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+.pedido-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(2px);
+    z-index: 1;
+}
+
+.pedido-card-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Variação para cards com imagem mais escura */
+.pedido-card.dark-bg::before {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.pedido-card.dark-bg .pedido-card-content {
+    color: white;
+}
+
+.pedido-card.dark-bg .pedido-card-content h4,
+.pedido-card.dark-bg .pedido-card-content p,
+.pedido-card.dark-bg .pedido-card-content span {
+    color: white;
+}
+
+/* Efeito hover para cards com imagem */
+.pedido-card:hover::before {
+    background: rgba(255, 255, 255, 0.75);
+}
+
+.pedido-card.dark-bg:hover::before {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+
+/* Estilos para arrastar e soltar etiquetas */
+.etiqueta-arrastavel {
+    cursor: grab;
+    user-select: none;
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px;
+    margin: 4px;
+    background: #f9fafb;
+}
+
+.etiqueta-arrastavel:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.etiqueta-arrastavel:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+/* Estilos para os cards de expedição durante o arrastar */
+.expedicao-card.drag-over {
+    border-color: #10b981 !important;
+    background-color: #ecfdf5 !important;
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.expedicao-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Área de etiquetas */
+.etiquetas-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 16px;
+    background: #f9fafb;
+}
+
+.etiquetas-container.has-etiquetas {
+    border-color: #10b981;
+    background: #ecfdf5;
+}
+
+/* Indicador visual de drop zone */
+.drop-zone {
+    position: relative;
+}
+
+.drop-zone::before {
+    content: "Arraste a etiqueta aqui";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+}
+
+.drop-zone.drag-over::before {
+    opacity: 1;
+}
+
+/* Animação de feedback visual */
+@keyframes etiqueta-associada {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); background-color: #10b981; }
+    100% { transform: scale(1); }
+}
+
+.etiqueta-associada {
+    animation: etiqueta-associada 0.6s ease-in-out;
+}
+
+/* Adicione ao final do seu arquivo style.css */
+
+.expedicao-detalhes {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.expedicao-card.expanded .expedicao-detalhes {
+    max-height: 500px; /* Um valor alto o suficiente para conter os detalhes */
+    margin-top: 1rem; /* Adiciona um espaço quando expandido */
+}
+
+.expedicao-card.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.expand-icon {
+    transition: transform 0.3s ease-in-out;
+}
+/* Adicione ao final do seu arquivo style.css */
+.pacote-card .expedicao-detalhes {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.pacote-card.expanded .expedicao-detalhes {
+    max-height: 300px; /* Aumente se tiver muitos itens por pedido */
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+
+/* ================================================= */
+/* ESTILO ATUALIZADO PARA DESTAQUE INTENSO DO MOTOBOY */
+/* ================================================= */
+
+.motoboy-card {
+    /* Fundo em gradiente roxo vibrante para máximo destaque */
+    background-image: linear-gradient(135deg, #FFF982, #ffffff);
+    
+    /* Borda sutil, pois o fundo já chama atenção */
+    border-color: #00ff11 !important; /* !important para sobrepor outras regras */
+    
+    /* Sombra pronunciada para dar profundidade */
+    box-shadow: 0 8px 25px rgba(147, 51, 234, 0.3);
+    
+    /* Garante que os textos principais fiquem brancos para legibilidade */
+    color: black; 
+}
+
+/* Ajustes finos para os textos dentro do card destacado */
+.motoboy-card .text-gray-800,
+.motoboy-card .text-gray-500,
+.motoboy-card .text-gray-600 {
+    color: rgb(0, 0, 0); /* Força o texto a ser branco */
+    opacity: 0.95; /* Leve transparência para suavizar */
+}
+
+.motoboy-card .font-bold {
+    opacity: 1; /* Deixa os textos em negrito totalmente opacos */
+}
+
+/* O fundo da seção inferior fica translúcido para se integrar ao gradiente */
+.motoboy-card .bg-gray-50 {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* O texto do contador de pedido fica mais destacado */
+.motoboy-card .text-indigo-600 {
+    color: black; /* Um lilás bem claro para contrastar */
+}
+
+/* Animação de pulso para o texto "Motoboy" */
+.motoboy-card .text-purple-700 {
+    color: rgb(0, 0, 0) !important; /* Garante que o texto "Motoboy" seja branco */
+    font-weight: 800; /* Extra-bold */
+    animation: pulse-white 2s infinite;
+}
+
+@keyframes pulse-white {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+
+/* Adicione ao seu arquivo style.css */
+
+/* Indica visualmente que um campo de texto é editável ao passar o mouse */
+.editable-sku:hover {
+    background-color: #FEF9C3; /* Amarelo bem claro (yellow-100) */
+    cursor: pointer;
+    border-radius: 4px;
+    outline: 1px dashed #FBBF24; /* Amarelo (amber-400) */
+}
+
+
+/* =================================================================================
+   ESTILOS PARA O PROCESSADOR DE PDF DA SHOPEE
+   ================================================================================= */
+
+/* Modal de processamento da Shopee */
+#shopee-pdf-modal {
+    backdrop-filter: blur(8px);
+}
+
+#shopee-pdf-modal .bg-white {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Lista de etiquetas */
+.etiqueta-shopee-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+}
+
+.etiqueta-shopee-item:hover {
+    border-color: #f97316; /* orange-500 */
+    background-color: #fff7ed; /* orange-50 */
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+}
+
+.etiqueta-shopee-item.associada {
+    border-color: #10b981; /* green-500 */
+    background-color: #ecfdf5; /* green-50 */
+}
+
+.etiqueta-shopee-item.associada::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #10b981;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Miniatura da etiqueta */
+.etiqueta-thumbnail {
+    transition: transform 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.etiqueta-thumbnail:hover {
+    transform: scale(1.05);
+    border-color: #f97316;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+/* Pedidos correspondentes */
+.pedido-correspondente {
+    position: relative;
+    overflow: hidden;
+}
+
+.pedido-correspondente::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #10b981, #059669);
+}
+
+/* Animação de processamento */
+.processando-pdf {
+    position: relative;
+}
+
+.processando-pdf::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.1), transparent);
+    animation: processamento-sweep 2s infinite;
+}
+
+@keyframes processamento-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Indicador de OCR em progresso */
+.ocr-progress {
+    background: linear-gradient(45deg, #f97316, #fb923c);
+    background-size: 200% 200%;
+    animation: ocr-gradient 2s ease infinite;
+}
+
+@keyframes ocr-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Status de ID do pedido */
+.pedido-id-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pedido-id-status.identificado {
+    background-color: #dcfce7; /* green-100 */
+    color: #166534; /* green-800 */
+}
+
+.pedido-id-status.nao-identificado {
+    background-color: #fef3c7; /* yellow-100 */
+    color: #92400e; /* yellow-800 */
+}
+
+/* Botões de ação da Shopee */
+.btn-shopee-primary {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.btn-shopee-primary:hover {
+    background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+}
+
+.btn-shopee-secondary {
+    background: transparent;
+    border: 2px solid #f97316;
+    color: #f97316;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-shopee-secondary:hover {
+    background: #f97316;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Grid responsivo para etiquetas */
+.etiquetas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .etiquetas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Overlay de carregamento */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #f97316;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Tooltip para IDs de pedido */
+.pedido-id-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.pedido-id-tooltip:hover::after {
+    content: attr(data-full-text);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+.pedido-id-tooltip:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1f2937;
+    z-index: 1000;
+}
+
+/* Animação de sucesso */
+.associacao-sucesso {
+    animation: pulse-success 0.6s ease-in-out;
+}
+
+@keyframes pulse-success {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color: #dcfce7; }
+    100% { transform: scale(1); }
+}
+
+/* Melhorias de acessibilidade */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Indicador de progresso do OCR */
+.ocr-progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #f3f4f6;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.ocr-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f97316, #fb923c);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    animation: progress-shimmer 2s infinite;
+}
+
+@keyframes progress-shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+}
+
+
+
+/* ================================================================================= */
+/* ESTILOS PARA O MÓDULO DE GESTÃO DE EANS                                           */
+/* ================================================================================= */
+
+.loja-btn.ativo {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Cores específicas para cada botão */
+.loja-btn[data-loja="MERCADO"].ativo { background-color: #facc15; color: #422006; } /* yellow-400 */
+.loja-btn[data-loja="SHOPEE"].ativo { background-color: #fb923c; color: #431407; } /* orange-400 */
+.loja-btn[data-loja="MAGALU"].ativo { background-color: #60a5fa; color: #1e3a8a; } /* blue-400 */
+.loja-btn[data-loja="SHEIN"].ativo { background-color: #374151; color: white; }    /* gray-700 */
+.loja-btn[data-loja="SITE"].ativo { background-color: #f472b6; color: #500724; }    /* pink-400 */
+
+.loja-btn:not(.ativo):hover {
+    transform: translateY(-1px);
+}
+
+/* Estilo para a linha da tabela marcada */
+#ean-results-container tbody tr.bg-green-50 {
+    background-color: #f0fdf4; /* green-50 */
+}
+#ean-results-container tbody tr.bg-green-50:hover {
+    background-color: #dcfce7; /* green-100 */
+}
+#ean-results-container tbody tr.bg-green-50 td {
+    color: #374151; /* gray-700 */
+}
+
+
+/* style.css */
+.lazy-image {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.image-loaded {
+    opacity: 1;
+}
+

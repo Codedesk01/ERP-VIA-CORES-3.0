@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gerenciamento - Via Cores</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- *** ADICIONE ESTA LINHA PARA LER ARQUIVOS EXCEL (.XLSX ) *** -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+     <!-- BIBLIOTECA PARA RENDERIZAR PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
+
+    <!-- BIBLIOTECA PARA OCR (LER TEXTO DE IMAGENS ) -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js'></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+
+
+
+
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen font-inter">
+    <div id="toast-container" class="fixed top-5 right-5 z-[100] space-y-3"></div>
+
+
+<!-- Tela de Login ATUALIZADA com Logo em Círculo Acima do Formulário -->
+<div id="login-screen" class="flex items-center justify-center min-h-screen relative overflow-hidden p-2">
+    
+    <!-- Elemento para o GIF de fundo -->
+<img src="{{ url_for('static', filename='background/background-img.gif') }}" alt="Background animado" id="login-bg-gif">
+
+    <!-- Container para o Formulário e a Logo -->
+    <div class="relative w-full max-w-md">
+        
+        <!-- LOGO EM CÍRCULO -->
+        <div class="absolute  left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+    <div class="bg-white rounded-full p-4 shadow-lg border border-white w-25 h-25 flex items-center justify-center">
+        <img src="{{ url_for('static', filename='logo/Logo Via Cores.png') }}" alt="Logo Via Cores" class="w-20 h-20 object-contain">
+    </div>
+</div>
+
+
+        <!-- Formulário de Login -->
+        <div class="relative z-10 bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-white/20 pt-20">
+            <!-- O pt-16 (padding-top) cria o espaço para a logo -->
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Bem-vindo</h2>
+                <p class="text-gray-600">Faça login para continuar</p>
+            </div>
+            <div class="space-y-6">
+                <input id="username" type="text" placeholder="Usuário" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                <input id="password" type="password" placeholder="Senha" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500">
+                <button id="login-button" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl hover:from-indigo-700 font-semibold">Entrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <!-- Main App -->
+    <div id="main-app" class="hidden">
+<!-- ================================================================= -->
+<!-- SUBSTITUA SUA SIDEBAR ATUAL POR ESTE BLOCO COMPLETO               -->
+<!-- ================================================================= -->
+
+<!-- Sidebar (Menu Lateral) -->
+<!-- ================================================================= -->
+<!-- SUBSTITUA SUA SIDEBAR ATUAL POR ESTE BLOCO COMPLETO               -->
+<!-- ================================================================= -->
+
+<!-- Sidebar (Menu Lateral) -->
+<div id="sidebar"
+     class="fixed top-0 left-0 h-full bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-2xl z-50
+            transition-all duration-300 ease-in-out
+            w-72 transform -translate-x-full md:translate-x-0  /* Começa escondido no mobile, visível no desktop */
+            flex flex-col">
+
+    <!-- Conteúdo Superior (com scroll interno) -->
+    <div class="flex flex-col flex-1 overflow-y-auto">
+        <!-- Cabeçalho da Sidebar -->
+        <div class="p-6 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center space-x-3 overflow-hidden">
+                <div class="w-12 h-12 bg-white/8 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 p-1 logo-container">
+                    <img src="{{ url_for('static', filename='logo/Logo Via Cores menu.png') }}" alt="Logo Via Cores menu">
+                </div>
+                <div class="sidebar-text">
+                    <h1 class="text-xl font-bold whitespace-nowrap">Via Cores - ERP</h1>
+                </div>
+            </div>
+            <!-- Ícone de Notificação -->
+            <div class="relative">
+                <button onclick="toggleNotificationPanel()" class="text-gray-300 hover:text-white text-2xl transition-colors">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <span id="notification-counter" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-gray-900"></span>
+            </div>
+        </div>
+
+        <!-- Informações do Usuário -->
+        <div class="p-6 border-b border-gray-700 overflow-hidden flex-shrink-0">
+            <div class="sidebar-text">
+                <p class="text-sm text-gray-400 whitespace-nowrap">Bem-vindo,</p>
+                <p class="font-semibold whitespace-nowrap"><span id="current-user"></span></p>
+            </div>
+        </div>
+
+        <!-- Menu de Navegação -->
+        <nav id="nav-menu" class="p-6 space-y-2 flex-1"></nav>
+    </div>
+
+    <!-- Seção Inferior (Fixa) -->
+    <div class="mt-auto flex-shrink-0">
+        <div class="p-6 border-t border-gray-700 space-y-3">
+            <button onclick="logout()" class="w-full text-left p-4 bg-red-600/20 hover:bg-red-500/40 rounded-xl transition flex items-center justify-center md:justify-start space-x-3" title="Sair">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="sidebar-text whitespace-nowrap">Sair</span>
+            </button>
+            <button onclick="toggleSidebarCollapse()" class="w-full text-left p-4 hover:bg-gray-700 rounded-xl transition items-center justify-center md:justify-start space-x-3 hidden md:flex" title="Recolher ou expandir o menu">
+                <i id="collapse-icon" class="fas fa-angle-double-left"></i>
+                <span class="sidebar-text whitespace-nowrap">Recolher Menu</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Painel de Notificações (Unificado) -->
+<div id="notification-panel" class="hidden fixed top-0 left-0 md:left-72 w-full md:w-96 h-full bg-white shadow-2xl z-40 transform transition-transform -translate-x-full">
+    <div class="flex flex-col h-full">
+        <div class="flex justify-between items-center p-4 border-b bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-800">Notificações</h3>
+            <button onclick="toggleNotificationPanel()" class="text-gray-500 hover:text-red-600 text-2xl font-bold">&times;</button>
+        </div>
+        <div id="notification-list" class="flex-grow overflow-y-auto p-4 space-y-4">
+            <!-- As notificações serão inseridas aqui pelo JS -->
+        </div>
+        <div class="p-4 border-t bg-gray-50">
+            <button onclick="marcarTodasComoLidas()" class="w-full text-sm text-indigo-600 font-semibold hover:underline">
+                Marcar todas como lidas
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay (Fundo Escuro para Mobile) que também fecha o menu -->
+<div id="sidebar-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onclick="toggleSidebar()"></div>
+
+<!-- Botão Hambúrguer para abrir o menu no mobile -->
+<button id="sidebar-toggle-button" class="md:hidden fixed top-4 left-4 z-30 bg-indigo-600 text-white p-3 rounded-xl shadow-lg" onclick="toggleSidebar()">
+    <i class="fas fa-bars text-lg"></i>
+</button>
+
+<!-- Conteúdo Principal -->
+<main id="main-content" class="transition-all duration-300 ease-in-out md:ml-72">
+    <!-- O resto do seu conteúdo principal vai aqui -->
+
+            <div class="p-4 sm:p-6 md:p-8">
+            <!-- Admin Dashboard -->
+<!-- Cole este bloco em seu index.html, substituindo o conteúdo de <div id="admin-dashboard" ...> -->
+
+<!-- Cole este bloco em seu index.html, substituindo o conteúdo de <div id="admin-dashboard" ...> -->
+
+<div id="admin-dashboard" class="hidden content-section fade-in">
+    <!-- CABEÇALHO -->
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
+        <div>
+            <h2 class="text-4xl font-bold text-gray-800">Dashboard de Operações</h2>
+            <p class="text-lg text-gray-500 mt-1">Visão geral do fluxo de pedidos.</p>
+        </div>
+        <div id="dashboard-data-atualizacao" class="text-sm text-gray-500 font-medium bg-white/80 px-4 py-2 rounded-lg shadow-md text-right">
+            <!-- A data da última atualização será inserida aqui -->
+        </div>
+    </div>
+
+    <!-- CARDS DE MÉTRICAS DO FUNIL -->
+<div id="metrics" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+        <!-- Os cards de métricas serão inseridos aqui pelo JavaScript -->
+    </div>
+
+    <!-- SEÇÃO DE GRÁFICOS PRINCIPAIS -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+        
+        <!-- Gráfico de Funil de Vendas (Ocupa 3 colunas) -->
+        <div class="lg:col-span-3 bg-white/80 p-6 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Funil de Pedidos em Tempo Real</h3>
+            <div class="h-96 w-full flex items-center justify-center">
+                <canvas id="funil-pedidos-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráficos Menores (Ocupam 2 colunas) -->
+        <div class="lg:col-span-2 flex flex-col gap-8">
+            <!-- Gráfico de Marketplaces -->
+            <div class="bg-white/80 p-6 rounded-2xl shadow-xl flex-1">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">Origem dos Pedidos Pendentes</h3>
+                <div class="h-40 w-full flex items-center justify-center">
+                    <canvas id="marketplace-chart"></canvas>
+                </div>
+            </div>
+            <!-- Histórico de Artes (Mantido do seu layout original) -->
+            <div class="bg-white/80 p-6 rounded-2xl shadow-xl flex-1">
+                 <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xl font-bold text-gray-800">Últimas Artes Enviadas</h3>
+                    <button onclick="openArtHistoryModal()" class="text-sm font-semibold text-indigo-600 hover:underline">
+                        Ver Histórico &rarr;
+                    </button>
+                </div>
+                <div id="art-history-logs" class="space-y-2 max-h-32 overflow-y-auto pr-2">
+                    <!-- O histórico de artes será inserido aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO DE ATIVIDADES RECENTES -->
+    <div class="bg-white/80 p-6 rounded-2xl shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Atividades Recentes de Pedidos</h3>
+            <button onclick="showSection('system-logs'); loadDynamicData('system-logs');" class="text-sm font-semibold text-indigo-600 hover:underline">
+                Ver todos os logs &rarr;
+            </button>
+        </div>
+        <div id="logs" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+            <!-- O feed de atividades será inserido aqui -->
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- MÓDULO DE CHAT INTERNO (VERSÃO 2.0 - COMPLETA) -->
+<!-- ================================================================================= -->
+<div id="chat" class="hidden content-section fade-in">
+    <div class="h-[calc(100vh-4rem)] bg-white/80 rounded-2xl shadow-2xl flex">
+        <!-- Barra Lateral de Conversas -->
+        <div class="w-1/3 border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">Conversas</h2>
+                <!-- Botão para criar grupo (apenas para admins) -->
+                <button onclick="abrirModalCriarGrupo()" class="bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-indigo-700" data-permission="chat:enviar" title="Criar Novo Grupo">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div id="lista-conversas" class="flex-grow overflow-y-auto">
+                <!-- A lista de usuários e grupos será inserida aqui -->
+            </div>
+        </div>
+
+        <!-- Janela de Chat Vazia -->
+        <div id="janela-chat-vazia" class="w-2/3 flex flex-col items-center justify-center text-center p-8">
+            <i class="fas fa-comments text-6xl text-gray-300"></i>
+            <h3 class="mt-4 text-xl font-bold text-gray-600">Selecione uma conversa</h3>
+            <p class="text-gray-500">Escolha um usuário ou grupo para começar a conversar.</p>
+        </div>
+
+        <!-- Janela de Chat Ativa -->
+        <div id="janela-chat-ativa" class="w-2/3 flex-col hidden">
+            <div class="p-4 border-b flex items-center gap-4">
+                <div id="chat-header-avatar" class="w-12 h-12 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-xl relative"></div>
+                <div>
+                    <h3 id="chat-header-nome" class="text-lg font-bold text-gray-800"></h3>
+                    <p id="chat-header-status" class="text-xs font-semibold"></p>
+                </div>
+            </div>
+            <div id="chat-corpo-mensagens" class="flex-grow overflow-y-auto p-6 space-y-6"></div>
+            <div class="p-4 bg-gray-50 border-t" data-permission="chat:enviar">
+                <div class="flex items-center gap-3">
+                    <button onclick="document.getElementById('chat-anexo-input').click()" class="text-gray-500 hover:text-indigo-600 text-xl p-2">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <input type="file" id="chat-anexo-input" class="hidden" onchange="enviarAnexoChat(event)">
+                    <input type="text" id="chat-input-mensagem" placeholder="Digite sua mensagem..." class="w-full p-3 border-2 rounded-xl">
+                    <button onclick="enviarMensagemChat()" class="bg-indigo-600 text-white rounded-xl px-6 py-3 font-semibold hover:bg-indigo-700">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PARA CRIAÇÃO DE GRUPO -->
+<div id="criar-grupo-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[90] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Criar Novo Grupo</h2>
+        <div class="space-y-4">
+            <div>
+                <label for="nome-grupo-input" class="text-sm font-medium">Nome do Grupo</label>
+                <input type="text" id="nome-grupo-input" placeholder="Ex: Equipe de Produção" class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+            <div>
+                <label class="text-sm font-medium">Selecionar Membros</label>
+                <div id="lista-membros-grupo" class="max-h-48 overflow-y-auto mt-2 space-y-2 p-3 border rounded-lg bg-gray-50">
+                    <!-- Checkboxes dos usuários serão inseridos aqui -->
+                </div>
+            </div>
+        </div>
+        <div class="mt-8 flex justify-end gap-4">
+            <button onclick="fecharModalCriarGrupo()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg">Cancelar</button>
+            <button onclick="criarGrupoChat()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold">Criar Grupo</button>
+        </div>
+    </div>
+</div>
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- NOVO: MODAL DE PRÉ-VISUALIZAÇÃO E LEGENDA DE ANEXO PARA O CHAT -->
+<!-- ================================================================================= -->
+<div id="anexo-preview-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[95] p-4 backdrop-blur-sm">
+    <div class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 flex flex-col gap-4">
+        
+        <!-- Área de Pré-visualização -->
+        <div id="anexo-preview-container" class="bg-black/50 rounded-lg h-72 flex items-center justify-center">
+            <!-- A pré-visualização da imagem ou ícone do arquivo aparecerá aqui -->
+        </div>
+
+        <!-- Campo para Legenda -->
+        <div>
+            <input type="text" id="anexo-legenda-input" placeholder="Adicionar uma legenda..." class="w-full p-3 bg-gray-700 text-white border-2 border-gray-600 rounded-xl focus:border-indigo-500 focus:outline-none">
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex justify-end gap-4">
+            <button onclick="cancelarEnvioAnexo()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-500">
+                Cancelar
+            </button>
+            <button onclick="confirmarEnvioAnexo()" class="bg-indigo-600 text-white px-8 py-2 rounded-lg font-semibold hover:bg-indigo-700">
+                <i class="fas fa-paper-plane mr-2"></i>Enviar
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MODAL DE HISTÓRICO COMPLETO DE ARTES -->
+<!-- ================================================================================= -->
+<div id="art-history-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div id="art-history-modal-content" class="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col p-4 md:p-8 transform transition-all scale-95 opacity-0">
+        
+        <!-- Cabeçalho do Modal -->
+        <div class="flex justify-between items-center mb-6 pb-4 border-b flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-history text-2xl text-indigo-600"></i>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Histórico Completo de Artes Enviadas</h2>
+            </div>
+            <button onclick="closeArtHistoryModal()" class="text-gray-500 hover:text-red-600 text-3xl">&times;</button>
+        </div>
+
+        <!-- Corpo do Modal (com scroll) -->
+        <div class="flex-grow overflow-y-auto pr-2">
+            <!-- Filtros -->
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md mb-6 sticky top-0 z-10">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    <div class="lg:col-span-2">
+                        <label for="art-history-filter-sku" class="text-sm font-medium text-gray-600">Filtrar por SKU</label>
+                        <input type="text" id="art-history-filter-sku" placeholder="Digite o SKU..." class="w-full p-3 mt-1 border-2 rounded-xl">
+                    </div>
+                    <div>
+                        <label for="art-history-filter-impressora" class="text-sm font-medium text-gray-600">Impressora</label>
+                        <select id="art-history-filter-impressora" class="w-full p-3 mt-1 border-2 rounded-xl">
+                            <option value="">Todas</option>
+                            <option value="1">Impressora 1</option>
+                            <option value="2">Impressora 2</option>
+                            <option value="3">Impressora 3</option>
+                            <option value="Lona">Lona</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="art-history-filter-data" class="text-sm font-medium text-gray-600">Filtrar por Data</label>
+                        <input type="date" id="art-history-filter-data" class="w-full p-3 mt-1 border-2 rounded-xl text-gray-500">
+                    </div>
+                    <button onclick="renderArtHistoryModal()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-semibold hover:bg-indigo-700">
+                        <i class="fas fa-filter mr-2"></i>Aplicar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela de Histórico -->
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                <div class="overflow-x-auto">
+                    <table id="art-history-modal-table" class="w-full min-w-[600px]">
+                        <thead class="bg-gray-100">
+                            <tr class="border-b">
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">Data/Hora</th>
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">SKU</th>
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">Quantidade</th>
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">Impressora</th>
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">Usuário</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- O corpo da tabela será gerado pelo JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+            <!-- Gestão de Usuários -->
+            <div id="user-management" class="hidden content-section fade-in">
+                
+                <h2 class="text-4xl font-bold text-gray-800 mb-8">Gestão de Usuários</h2>
+                <div class="space-y-8">
+                    <!-- Criar Usuário -->
+                    <!-- Dentro do <div id="user-management" ...> -->
+<div class="bg-white/80 p-8 rounded-2xl shadow-xl" data-permission="userManagement:criar">
+    <h3 class="text-xl font-bold mb-6 text-gray-800">Criar Novo Usuário</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <input id="new-user" type="text" placeholder="Nome do Usuário" class="p-4 border-2 rounded-xl">
+        <input id="new-pass" type="password" placeholder="Senha (mín. 6 caracteres)" class="p-4 border-2 rounded-xl">
+        <!-- LINHA MODIFICADA ABAIXO -->
+        <select id="new-role" class="p-4 border-2 rounded-xl">
+            <option value="user">Usuário</option>
+            <option value="admin-setor">Admin de Setor</option>
+            <option value="admin-master">Admin Master</option>
+        </select>
+    </div>
+    <button onclick="createUser()" class="mt-6 bg-green-500 text-white px-8 py-4 rounded-xl font-semibold">Criar Usuário</button>
+</div>
+
+                    <!-- Lista de Usuários -->
+                    <div class="bg-white/80 p-8 rounded-2xl shadow-xl">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800">Lista de Usuários</h3>
+                        <div class="table-container">
+                            <table id="users-table" class="w-full">
+                                <thead>
+                                    <tr class="border-b-2">
+                                        <th class="p-4 text-left font-semibold">Usuário</th>
+                                        <th class="p-4 text-left font-semibold">Role</th>
+                                        <th class="p-4 text-left font-semibold">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Configuração de Permissões -->
+                    <div class="bg-white/80 p-8 rounded-2xl shadow-xl" data-permission="userManagement:editar">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800">Configurar Permissões</h3>
+                        <select id="perm-user" class="w-full p-4 border-2 rounded-xl mb-6"></select>
+                        <div id="modules-perm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"></div>
+                        <button onclick="savePermissions()" class="bg-indigo-600 text-white px-8 py-4 rounded-xl font-semibold">Salvar Permissões</button>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Estoque -->
+            <div id="estoque" class="hidden content-section fade-in">
+                <h2 class="text-4xl font-bold text-gray-800 mb-8">Gestão de Estoque Avançada</h2>
+
+<!-- Bloco de Ações e Relatórios -->
+<div class="bg-white/80 p-6 rounded-2xl shadow-xl mb-8">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">Ações e Relatórios</h3>
+<!-- index.html (dentro da seção de Estoque) -->
+
+<div class="flex flex-wrap items-start gap-4">
+    <!-- Ações Principais -->
+    <div class="flex flex-wrap gap-4">
+        <button onclick="triggerXlsxImport()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 shadow-md flex items-center" data-permission="estoque:cadastrar">
+            <i class="fas fa-file-excel mr-2"></i>Importar Excel (.xlsx)
+        </button>
+        <button onclick="openAdvancedRegistrationModal()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-600 shadow-md flex items-center" data-permission="estoque:cadastrar">
+            <i class="fas fa-plus-circle mr-2"></i>Cadastro Avançado
+        </button>
+        <button onclick="generateStockReport()" class="bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-800 shadow-md flex items-center" data-permission="estoque:visualizar">
+            <i class="fas fa-file-csv mr-2"></i>Gerar Relatório (CSV)
+        </button>
+        <!-- Botão do Submódulo de Transações -->
+        <button onclick="openTransactionsModal()" class="bg-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-teal-700 shadow-md flex items-center" data-permission="estoque:visualizar">
+            <i class="fas fa-history mr-2"></i>Relatório de Transações
+        </button>
+    </div>
+
+    <!-- Ações de Limpeza (separadas visualmente) -->
+    <!-- Ações de Limpeza (separadas visualmente) - ATUALIZADO -->
+<div class="border-l-4 border-red-300 pl-4 flex flex-wrap gap-4" data-permission="estoque:excluir">
+    <button onclick="clearStockWithPassword('TOTAL')" class="bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 shadow-md flex items-center">
+        <i class="fas fa-trash-alt mr-2"></i>Limpar Estoque Total
+    </button>
+    <button onclick="clearStockWithPassword('PREFIXO')" class="bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 shadow-md flex items-center">
+        <i class="fas fa-eraser mr-2"></i>Limpar por Prefixo
+    </button>
+</div>
+
+</div>
+</div>
+        <!-- index.html (dentro da div id="estoque") -->
+
+<!-- ================================================================================= -->
+<!-- NOVO: PAINEL DE AUTORIZAÇÃO DE LIMPEZA DE ESTOQUE -->
+<!-- ================================================================================= -->
+<div id="stock-clear-authorization-panel" class="hidden mt-8">
+    <h3 class="text-2xl font-bold text-yellow-600 mb-4 flex items-center gap-3">
+        <i class="fas fa-shield-alt animate-pulse"></i>
+        Ações de Limpeza Aguardando Autorização
+    </h3>
+    <div id="stock-clear-requests-container" class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg shadow-md space-y-4">
+        <!-- As solicitações pendentes serão renderizadas aqui pelo JavaScript -->
+    </div>
+</div>
+
+
+
+                <!-- Bloco de Consulta de Precisão -->
+                <div class="bg-white/80 p-6 rounded-2xl shadow-xl mb-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Consulta de Precisão</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Campo de Pesquisa de SKU (ocupa 2 colunas) -->
+                        <div class="relative md:col-span-2">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input id="filter-sku" type="text" placeholder="Digite um ou mais SKUs (separados por vírgula ou espaço)..." class="w-full p-3 pl-12 border-2 rounded-xl focus:border-indigo-500 transition">
+                        </div>
+                        <!-- Filtro de Status -->
+                        <div class="relative">
+                            <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <select id="filter-status" class="w-full p-3 pl-12 border-2 rounded-xl appearance-none focus:border-indigo-500 transition">
+                                <option value="">Todos os Status</option>
+                                <option value="ok">OK</option>
+                                <option value="low">Estoque Baixo</option>
+                                <option value="over">Capacidade Excedida</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloco de Inventário (a tabela será populada aqui) -->
+<div id="inventory-container" class="bg-white/80 p-8 rounded-2xl shadow-xl mb-8 hidden">
+    <h3 class="text-xl font-bold text-gray-800 mb-6">Inventário Atual</h3>
+    <div class="table-container">
+        <table id="itens-table" class="w-full">
+            <!-- O cabeçalho e o corpo da tabela serão gerados pelo JS -->
+        </table>
+    </div>
+</div>
+
+
+                <!-- Bloco de Movimentações Inteligentes -->
+<!-- NOVO: Bloco de Movimentações Inteligentes (com modo em massa) -->
+<div class="bg-white/80 p-8 rounded-2xl shadow-xl" data-permission="estoque:movimentar">
+    <div class="flex justify-between items-center mb-2">
+        <h3 class="text-xl font-bold text-gray-800">Terminal de Movimentação Rápida</h3>
+        <!-- Seletor de Modo -->
+        <div class="flex items-center bg-gray-200 rounded-lg p-1 text-sm">
+            <button id="mode-individual" onclick="switchMovementMode('individual')" class="px-3 py-1 rounded-md bg-white shadow font-semibold">Individual</button>
+            <button id="mode-massa" onclick="switchMovementMode('massa')" class="px-3 py-1 rounded-md text-gray-600">Em Massa</button>
+        </div>
+    </div>
+    <p id="terminal-description" class="text-sm text-gray-500 mb-6">Digite o SKU para ver as prateleiras disponíveis e realizar a movimentação.</p>
+
+    <!-- Seção de Movimentação Individual -->
+    <div id="terminal-individual">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+            <!-- Coluna 1: Input do SKU -->
+            <div class="md:col-span-2">
+                <label for="mov-sku-terminal" class="text-sm font-medium text-gray-600">1. Digite o SKU</label>
+                <input id="mov-sku-terminal" type="text" placeholder="SKU do item" class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+            <!-- Coluna 2: Prateleiras Disponíveis -->
+            <div class="md:col-span-3">
+                <label class="text-sm font-medium text-gray-600">2. Selecione a Prateleira</label>
+                <div id="mov-prateleiras-disponiveis" class="mt-1 p-2 border-2 rounded-xl bg-gray-50 min-h-[50px]">
+                    <p class="text-gray-400 text-center p-2">Aguardando SKU...</p>
+                </div>
+            </div>
+        </div>
+        <!-- Seção de Ação (aparece após selecionar a prateleira) -->
+        <!-- index.html (dentro da seção de Estoque -> Terminal de Movimentação) -->
+
+<!-- Seção de Ação (aparece após selecionar a prateleira) -->
+<div id="mov-action-section" class="hidden mt-6 grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+    <!-- Prateleira Selecionada -->
+    <div class="md:col-span-2">
+        <label class="text-sm font-medium text-gray-600">Prateleira Selecionada</label>
+        <input id="mov-prateleira-selecionada" type="text" class="w-full p-3 mt-1 bg-gray-200 border-2 rounded-xl" readonly>
+    </div>
+    <!-- Quantidade -->
+    <div class="md:col-span-1">
+        <label for="mov-qtd-terminal" class="text-sm font-medium text-gray-600">3. Quantidade</label>
+        <input id="mov-qtd-terminal" type="number" min="1" placeholder="Qtd." class="w-full p-3 mt-1 border-2 rounded-xl">
+    </div>
+    <!-- Botões de Ação -->
+    <div class="flex space-x-2 md:col-span-2">
+        <button onclick="executeMovement('Entrada')" class="w-full bg-green-500 text-white p-3 rounded-xl font-semibold hover:bg-green-600 flex-1" title="Registrar Entrada"><i class="fas fa-plus text-lg"></i></button>
+        <button onclick="executeMovement('Saída')" class="w-full bg-red-500 text-white p-3 rounded-xl font-semibold hover:bg-red-600 flex-1" title="Registrar Saída"><i class="fas fa-minus text-lg"></i></button>
+    </div>
+
+    <!-- NOVA SEÇÃO DE CLASSIFICAÇÃO -->
+    <div class="md:col-span-3 mt-4">
+        <label for="mov-classificacao-individual" class="text-sm font-medium text-gray-600">4. Classificação da Movimentação</label>
+        <select id="mov-classificacao-individual" onchange="toggleMotivoField(this.value, 'mov-motivo-individual-container')" class="w-full p-3 mt-1 border-2 rounded-xl">
+            <option value="ESTOQUE">Movimentação de Estoque</option>
+            <option value="VENDA">Venda</option>
+            <option value="DEVOLUÇÃO">Devolução</option>
+            <option value="CANCELADO">Cancelado</option>
+            <option value="OUTROS">Outros</option>
+        </select>
+    </div>
+    <div id="mov-motivo-individual-container" class="md:col-span-2 mt-4 hidden">
+        <label for="mov-motivo-individual" class="text-sm font-medium text-gray-600">Motivo (para "Outros")</label>
+        <input type="text" id="mov-motivo-individual" placeholder="Especifique o motivo..." class="w-full p-3 mt-1 border-2 rounded-xl">
+    </div>
+</div>
+
+    </div>
+
+<!-- Seção de Movimentação em Massa (oculta por padrão) -->
+<!-- index.html (dentro da seção de Estoque) -->
+
+<!-- Seção de Movimentação em Massa (oculta por padrão) -->
+<div id="terminal-massa" class="hidden">
+    <div>
+        <label for="mov-dados-massa" class="text-sm font-medium text-gray-600">
+            1. Cole os dados no formato: SKU,PRATELEIRA,QUANTIDADE (um por linha)
+        </label>
+        <textarea id="mov-dados-massa" rows="8" 
+                  placeholder="Exemplo:&#10;SKU001,A-01,5&#10;SKU002,B-05,10" 
+                  class="w-full p-3 mt-1 border-2 rounded-xl font-mono text-sm focus:border-indigo-500 transition"></textarea>
+        <p class="text-xs text-gray-500 mt-1">Use vírgula (,) para separar os campos. Cada item deve estar em uma nova linha.</p>
+    </div>
+    
+    <!-- SEÇÃO DE CONTROLES DA OPERAÇÃO EM MASSA -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 items-end">
+        <!-- TIPO DE OPERAÇÃO (ENTRADA/SAÍDA) -->
+        <div>
+            <label for="mov-tipo-operacao-massa" class="text-sm font-medium text-gray-600">2. Tipo de Operação</label>
+            <select id="mov-tipo-operacao-massa" class="w-full p-3 mt-1 border-2 rounded-xl">
+                <option value="SAIDA">Saída em Massa</option>
+                <option value="ENTRADA">Entrada em Massa</option>
+            </select>
+        </div>
+        <!-- CLASSIFICAÇÃO DA MOVIMENTAÇÃO -->
+        <div>
+            <label for="mov-classificacao-massa" class="text-sm font-medium text-gray-600">3. Classificação</label>
+            <select id="mov-classificacao-massa" onchange="toggleMotivoField(this.value, 'mov-motivo-massa-container')" class="w-full p-3 mt-1 border-2 rounded-xl">
+                <option value="ESTOQUE">Mov. de Estoque</option>
+                <option value="VENDA">Venda</option>
+                <option value="DEVOLUÇÃO">Devolução</option>
+                <option value="CANCELADO">Cancelado</option>
+                <option value="OUTROS">Outros</option>
+            </select>
+        </div>
+        <!-- MOTIVO (CONDICIONAL) -->
+        <div id="mov-motivo-massa-container" class="hidden">
+            <label for="mov-motivo-massa" class="text-sm font-medium text-gray-600">Motivo (para "Outros")</label>
+            <input type="text" id="mov-motivo-massa" placeholder="Especifique o motivo..." class="w-full p-3 mt-1 border-2 rounded-xl">
+        </div>
+    </div>
+    
+    <button id="btn-executar-massa" onclick="executeBulkMovementAdvanced()" class="w-full mt-6 bg-indigo-600 text-white p-4 rounded-xl font-semibold hover:bg-indigo-700 shadow-lg flex items-center justify-center">
+        <i class="fas fa-cogs mr-2"></i>Executar Operação em Massa
+    </button>
+</div>
+
+
+
+    </div>
+</div>
+
+
+<!-- index.html -->
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- MODAL DO RELATÓRIO DE TRANSAÇÕES DE ESTOQUE (SUBMÓDULO) -->
+<!-- ================================================================================= -->
+<div id="transactions-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <!-- Ajuste: Padding responsivo (p-4 em telas pequenas, p-8 em maiores) -->
+    <div id="transactions-modal-content" class="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col p-4 md:p-8 transform transition-all scale-95 opacity-0">
+        
+        <!-- Cabeçalho do Modal -->
+        <!-- Ajuste: Tamanho da fonte responsivo -->
+        <div class="flex justify-between items-center mb-6 pb-4 border-b flex-shrink-0">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Relatório de Transações de Estoque</h2>
+            <button onclick="closeTransactionsModal()" class="text-gray-500 hover:text-red-600 text-3xl">&times;</button>
+        </div>
+
+        <!-- Corpo do Modal (com scroll) -->
+        <!-- Ajuste: Removido margem negativa (-mr-4) para evitar cortes -->
+        <div class="flex-grow overflow-y-auto pr-2">
+            <!-- Filtros -->
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md mb-6">
+                <h3 class="text-lg font-bold text-gray-700 mb-4">Filtrar Transações</h3>
+                <!-- Ajuste: O grid agora se adapta melhor, empilhando em telas pequenas -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- Ajuste: Campo de SKU e select ocupam a largura toda em telas pequenas/médias -->
+                    <input type="text" id="trans-modal-filter-sku" placeholder="Filtrar por SKU..." class="p-3 border rounded-lg col-span-1 sm:col-span-2 lg:col-span-1">
+                    <input type="date" id="trans-modal-filter-data-inicio" class="p-3 border rounded-lg text-gray-500">
+                    <input type="date" id="trans-modal-filter-data-fim" class="p-3 border rounded-lg text-gray-500">
+                    <select id="trans-modal-filter-tipo" class="p-3 border rounded-lg col-span-1 sm:col-span-2 lg:col-span-1">
+                        <option value="">Todos os Tipos</option>
+                        <option value="CADASTRO">Cadastro</option>
+                        <option value="ENTRADA">Entrada</option>
+                        <option value="SAÍDA">Saída</option>
+                        <option value="AJUSTE">Ajuste Manual</option>
+                        <option value="EDIÇÃO">Edição</option>
+                        <option value="RESERVA">Reserva</option>
+                        <option value="DESBLOQUEIO">Desbloqueio</option>
+                        <option value="VENDA">Venda</option>
+                        <option value="DEVOLUÇÃO">Devolução</option>
+                        <option value="CANCELADO">Cancelado</option>
+                        <option value="OUTROS">Outros</option>
+                        <option value="EXCLUSÃO">Exclusão</option>
+                    </select>
+                    <!-- Ajuste: Botão ocupa a largura toda em telas pequenas/médias -->
+                    <button onclick="loadTransactionsModal()" class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 col-span-1 sm:col-span-2 lg:col-span-1">Aplicar Filtros</button>
+                </div>
+            </div>
+
+            <!-- Insights Rápidos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">Top 5 - Entradas (Unidades)</h3>
+                    <ul id="modal-top-entradas" class="space-y-2"></ul>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">Top 5 - Saídas (Unidades)</h3>
+                    <ul id="modal-top-saidas" class="space-y-2"></ul>
+                </div>
+            </div>
+
+            <!-- Tabela de Transações -->
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md">
+                
+                <!-- CABEÇALHO DA SEÇÃO: Título e Informações da Paginação Lado a Lado -->
+                <!-- Ajuste: Itens se alinham verticalmente em telas pequenas -->
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-2">
+                    <h3 class="text-lg font-bold text-gray-700">Histórico de Movimentações</h3>
+                    <div id="trans-pagination-info" class="text-sm text-gray-600 font-medium text-left sm:text-right"></div>
+                </div>
+
+                <!-- CONTÊINER DA TABELA COM SCROLL -->
+                <!-- Ajuste: Adicionado overflow-x-auto para rolagem horizontal apenas na tabela -->
+                <div class="overflow-x-auto">
+                    <!-- Ajuste: Definida uma largura mínima para a tabela para evitar quebra de layout -->
+                    <table id="modal-transacoes-table" class="w-full min-w-[700px]">
+                        <thead class="sticky top-0 bg-gray-200 z-10">
+                            <tr class="border-b">
+                                <th class="p-3 text-left text-sm">Data/Hora</th>
+                                <th class="p-3 text-left text-sm">Usuário</th>
+                                <th class="p-3 text-left text-sm">SKU</th>
+                                <th class="p-3 text-left text-sm">Tipo</th>
+                                <th class="p-3 text-left text-sm">Qtd</th>
+                                <th class="p-3 text-left text-sm">Prateleira</th>
+                                <th class="p-3 text-left text-sm">Motivo/Obs.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- O corpo da tabela será gerado pelo JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- RODAPÉ DA SEÇÃO: Contêiner para os botões de paginação -->
+                <div id="trans-pagination-controls" class="flex justify-center items-center mt-4 space-x-2 md:space-x-4">
+                    <!-- Os botões de navegação serão gerados dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MÓDULO DE PEDIDOS (VERSÃO COM ABAS E PEDIDOS MANUAIS) -->
+<!-- ================================================================================= -->
+<!-- Início do Bloco para Substituir -->
+<div id="pedidos" class="hidden content-section fade-in">
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+        
+        <!-- Grupo da Esquerda: Título e Data -->
+        <div>
+            <h2 class="text-4xl font-bold text-gray-800">Gestão de Pedidos</h2>
+            <div id="pedidos-data-atualizacao" class="text-sm text-gray-500 font-medium mt-1">
+                <!-- A data da última atualização será inserida aqui -->
+            </div>
+        </div>
+        
+        <!-- Grupo da Direita: Contadores Lado a Lado -->
+        <div class="flex items-center gap-4">
+            <!-- Card de Itens Totais (NOVO) -->
+            <div class="bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg text-center">
+                <p class="text-3xl font-bold" id="contador-itens-pendentes">0</p>
+                <p class="text-xs font-semibold uppercase">Itens Totais a Enviar</p>
+            </div>
+            <!-- Card de Pedidos Totais (Ajustado) -->
+            <div class="bg-indigo-600 text-white px-5 py-3 rounded-xl shadow-lg text-center">
+                <p class="text-3xl font-bold" id="contador-pedidos-pendentes">0</p>
+                <p class="text-xs font-semibold uppercase">Pedidos Pendentes</p>
+            </div>
+        </div>
+    </div>
+    <!-- O resto do seu conteúdo de pedidos continua aqui... -->
+
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MODAL DE AUTENTICAÇÃO DE ADMIN PARA EDIÇÃO DE SKU -->
+<!-- ================================================================================= -->
+<div id="admin-auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[90] p-4">
+    <div id="admin-auth-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-95 opacity-0">
+        
+        <!-- Cabeçalho do Modal -->
+        <div class="flex flex-col items-center text-center mb-6">
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-shield-alt text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Acesso Restrito</h2>
+            <p class="text-sm text-gray-600 mt-2">A edição de SKU requer permissão de administrador. Por favor, insira a senha para prosseguir.</p>
+        </div>
+
+        <!-- Corpo do Modal (Formulário) -->
+        <div class="space-y-4">
+            <div>
+                <label for="admin-password-input" class="text-sm font-medium text-gray-700">Senha do Administrador</label>
+                <input type="password" id="admin-password-input" placeholder="Digite a senha..." class="w-full p-3 mt-1 border-2 rounded-xl focus:border-yellow-500 transition">
+            </div>
+        </div>
+
+        <!-- Rodapé do Modal (Botões) -->
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <button onclick="cancelarEdicaoSku()" class="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 order-2 sm:order-1">
+                Cancelar
+            </button>
+            <button onclick="validarSenhaEProsseguirEdicao()" class="w-full bg-yellow-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-yellow-600 order-1 sm:order-2">
+                <i class="fas fa-check-circle mr-2"></i>Confirmar e Editar
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+    <!-- Ações Gerais (Relatórios) -->
+    <div class="bg-white/80 p-6 rounded-2xl shadow-xl mb-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Relatórios e Ações Gerais</h3>
+        <div class="flex flex-wrap gap-4">
+            <button onclick="abrirModalListaSeparacao()" class="bg-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-teal-700 shadow-md" data-permission="pedidos:visualizar">
+                <i class="fas fa-boxes mr-2"></i>Lista de Separação
+            </button>
+            <button onclick="abrirModalHistorico()" class="bg-gray-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-800 shadow-md" data-permission="pedidos:visualizar">
+                <i class="fas fa-history mr-2"></i>Histórico de Pedidos
+            </button>
+        </div>
+    </div>
+
+    <!-- Painel de Ações em Massa -->
+    <div id="painel-acoes-massa" class="sticky top-4 bg-purple-800 text-white p-4 rounded-2xl shadow-2xl mb-8 z-30 hidden">
+        <div class="flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-bold">Ação em Massa</h3>
+                <p class="text-sm"><span id="contador-selecionados">0</span> item(ns) selecionado(s).</p>
+            </div>
+            <button onclick="confirmarMovimentacao()" class="bg-white text-purple-800 font-bold px-8 py-3 rounded-xl hover:bg-purple-100 transition-transform hover:scale-105">
+                Mover para Produção
+            </button>
+        </div>
+    </div>
+
+    <!-- Seções de Erro e Cancelados -->
+    <div id="pedidos-com-erro-section" class="hidden mb-8">
+        <h3 class="text-2xl font-bold text-red-700 mb-4">Pedidos com Erro na Importação</h3>
+        <div id="pedidos-com-erro-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+    <div id="pedidos-cancelados-section" class="hidden mb-8">
+        <h3 class="text-2xl font-bold text-red-700 mb-4">Pedidos Cancelados</h3>
+        <div id="pedidos-cancelados-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    </div>
+
+    <!-- NAVEGAÇÃO DAS ABAS COM CONTADORES -->
+    <div class="border-b border-gray-300 mb-6">
+        <nav class="flex space-x-4" aria-label="Tabs">
+            <button onclick="showTab('ml')" id="tab-ml" class="tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2">
+                <i class="fas fa-store text-yellow-500"></i>
+                <span>Mercado Livre</span>
+                <span id="contador-ml" class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+            <button onclick="showTab('shopee')" id="tab-shopee" class="tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2">
+                <i class="fas fa-shopping-bag text-orange-500"></i>
+                <span>Shopee</span>
+                <span id="contador-shopee" class="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+            <!-- NOVA ABA PARA PEDIDOS MANUAIS (VC) -->
+            <button onclick="showTab('vc')" id="tab-vc" class="tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2">
+                <i class="fas fa-user-tag text-cyan-500"></i>
+                <span>Pedidos Manuais (VC)</span>
+                <span id="contador-vc" class="bg-cyan-200 text-cyan-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- CONTEÚDO DAS ABAS -->
+    <div id="tab-content-container">
+        <!-- ABA MERCADO LIVRE -->
+        <div id="pedidos-ml-section" class="tab-content">
+            <div class="bg-white/80 p-6 rounded-2xl shadow-xl mb-8">
+                <div class="flex flex-wrap gap-4">
+                    <textarea id="ml-input" rows="8" placeholder="Cole aqui as informações dos pedidos copiadas do Mercado Livre..." class="w-full p-4 border-2 rounded-xl font-mono text-sm flex-grow"></textarea>
+                    <button onclick="processarPedidosMarketplace('ml')" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 shadow-lg self-start">
+                        <i class="fas fa-cogs mr-2"></i>Processar Pedidos ML
+                    </button>
+                </div>
+            </div>
+            <div id="pedidos-ml-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </div>
+
+        <!-- ABA SHOPEE -->
+        <div id="pedidos-shopee-section" class="tab-content hidden">
+            <div class="bg-white/80 p-6 rounded-2xl shadow-xl mb-8">
+                <div class="flex flex-wrap gap-4">
+                    <textarea id="shopee-input" rows="8" placeholder="Cole aqui as informações dos pedidos copiadas da Shopee..." class="w-full p-4 border-2 rounded-xl font-mono text-sm flex-grow"></textarea>
+                    <button onclick="processarPedidosMarketplace('shopee')" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 shadow-lg self-start">
+                        <i class="fas fa-cogs mr-2"></i>Processar Pedidos Shopee
+                    </button>
+                </div>
+            </div>
+            <div id="pedidos-shopee-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </div>
+
+ <!-- NOVA ABA DE CONTEÚDO PARA PEDIDOS MANUAIS (VC) - VERSÃO ATUALIZADA -->
+<!-- NOVA ABA DE CONTEÚDO PARA PEDIDOS MANUAIS (VC) - VERSÃO ATUALIZADA -->
+<!-- ARQUIVO: index.html -->
+<!-- SUBSTITUA A SEÇÃO "pedidos-vc-section" INTEIRA POR ESTA: -->
+
+<div id="pedidos-vc-section" class="tab-content hidden">
+    <!-- Formulário de Inserção (inalterado) -->
+    <div class="bg-white/80 p-8 rounded-2xl shadow-xl mb-8">
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">Inserir Pedidos Manuais (Via Cores)</h3>
+        <p class="text-sm text-gray-600 mb-6">Cadastre novos pedidos ou adicione itens a um pedido existente que esteja incompleto na expedição usando o mesmo ID.</p>
+        <div class="space-y-4">
+            <div>
+                <label for="vc-id" class="text-sm font-medium text-gray-700">ID do Pedido (Ex: #2000008409817004, #SHEIN123)</label>
+                <input type="text" id="vc-id" placeholder="Use o mesmo ID para juntar a um pedido existente" class="w-full p-3 mt-1 border-2 rounded-xl" oninput="atualizarSkuManual()">
+            </div>
+            <div>
+                <label for="vc-skus" class="text-sm font-medium text-gray-700">SKU(s) do Pedido (separar múltiplos por vírgula)</label>
+                <input type="text" id="vc-skus" placeholder="SKU sugerido ou digite manualmente" class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+            <div>
+                <label for="vc-loja" class="text-sm font-medium text-gray-700">Loja / Canal de Venda</label>
+                <input type="text" id="vc-loja" list="lojas-sugeridas" placeholder="Ex: WhatsApp, Magalu, Shein, Site" class="w-full p-3 mt-1 border-2 rounded-xl">
+                <datalist id="lojas-sugeridas">
+                    <option value="WhatsApp"></option>
+                    <option value="Magalu"></option>
+                    <option value="MercadoLivre"></option>
+                    <option value="Shopee"></option>
+                    <option value="Shein"></option>
+                    <option value="Site"></option>
+                </datalist>
+            </div>
+            <div>
+                <label for="vc-material" class="text-sm font-medium text-gray-700">Material</label>
+                <select id="vc-material" class="w-full p-3 mt-1 border-2 rounded-xl" onchange="atualizarSkuManual()">
+                    <option value="Nenhum" selected>Nenhum</option>
+                    <option value="Oxford">Oxford</option>
+                    <option value="Malha">Malha</option>
+                    <option value="Lona">Lona</option>
+                    <option value="Decor">Decor</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="processarPedidosManuais()" class="w-full mt-6 bg-cyan-600 text-white p-4 rounded-xl font-semibold hover:bg-cyan-700 shadow-lg">
+            <i class="fas fa-plus-circle mr-2"></i>Processar Pedidos ViaCores
+        </button>
+    </div>
+
+    <!-- ======================= INÍCIO DA CORREÇÃO ======================= -->
+    <!-- Container para os cards de pedidos manuais. Esta linha estava faltando. -->
+    <div id="pedidos-vc-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    <!-- ======================== FIM DA CORREÇÃO ========================= -->
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MÓDULO DE PEDIDOS (VERSÃO COM FLUXO DE PRODUÇÃO) -->
+<!-- ================================================================================= -->
+
+   
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MODAL DE RELATÓRIO DE SEPARAÇÃO (PICKING LIST) -->
+<!-- ================================================================================= -->
+<div id="relatorio-saida-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col p-8 transform transition-all scale-95 opacity-0" id="relatorio-saida-content">
+        <div class="flex justify-between items-center mb-4 pb-4 border-b">
+            <div>
+                <h2 id="relatorio-modal-titulo" class="text-2xl font-bold text-gray-800">Relatório de Separação</h2>
+                <p id="relatorio-modal-data" class="text-sm text-gray-500"></p>
+            </div>
+            <button onclick="fecharModalRelatorioSaida()" class="text-gray-500 hover:text-red-600 text-3xl">&times;</button>
+        </div>
+        
+        <div class="flex-grow overflow-y-auto pr-4 mb-4">
+            <p id="relatorio-modal-descricao" class="text-sm text-gray-600 mb-6 bg-blue-50 p-3 rounded-lg border border-blue-200"></p>
+            
+            <!-- Relatório Mercado Livre -->
+            <div id="relatorio-ml-section" class="mb-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3 flex items-center"><i class="fas fa-store mr-3 text-yellow-500"></i>Mercado Livre</h3>
+                <div id="relatorio-ml-container" class="space-y-4"></div>
+            </div>
+
+            <!-- Relatório Shopee -->
+            <div id="relatorio-shopee-section">
+                <h3 class="text-xl font-bold text-gray-800 mb-3 flex items-center"><i class="fas fa-shopping-bag mr-3 text-orange-500"></i>Shopee</h3>
+                <div id="relatorio-shopee-container" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t">
+            <button onclick="arquivarRelatorioDoDia()" class="w-full bg-red-600 text-white p-4 rounded-xl font-semibold hover:bg-red-700 shadow-lg flex items-center justify-center">
+                <i class="fas fa-archive mr-2"></i>Arquivar Relatório e Limpar para o Próximo Dia
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- MODAL DE AUTORIZAÇÃO PARA SEGUNDA UNIDADE (ADMIN) -->
+<!-- ================================================================================= -->
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- MODAL DE AUTORIZAÇÃO PARA SEGUNDA UNIDADE (ADMIN) -->
+<!-- ================================================================================= -->
+<div id="autorizacao-duplicidade-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70] p-4">
+    <div id="autorizacao-duplicidade-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 transform transition-all scale-95 opacity-0">
+        
+        <div class="flex flex-col items-center text-center mb-6">
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-exclamation-triangle text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Atenção: Item Duplicado</h2>
+            <p class="text-sm text-gray-600 mt-2">
+                Uma unidade deste pedido já foi enviada para o fluxo. Esta segunda unidade está bloqueada e requer sua ação.
+            </p>
+        </div>
+
+        <div class="bg-gray-100 p-4 rounded-lg mb-6 border text-center">
+            <p class="text-sm text-gray-600">Pedido ID: <strong id="auth-pedido-label" class="font-mono"></strong></p>
+            <p class="text-sm text-gray-600">SKU Bloqueado: <strong id="auth-sku-label" class="font-mono"></strong></p>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Ação 1: Autorizar Produção -->
+            <button onclick="autorizarEProcessarSegundaUnidade()" class="w-full bg-green-600 text-white p-4 rounded-xl font-semibold hover:bg-green-700 flex items-center justify-center gap-2">
+                <i class="fas fa-check-circle"></i> Desbloquear Item (Manter SKU)
+            </button>
+
+            <!-- Ação 2: Trocar SKU -->
+            <div class="border-t pt-4">
+                <label for="auth-novo-sku-input" class="text-sm font-medium text-gray-700">Ou, se necessário, troque o SKU e libere:</label>
+                <div class="flex gap-2 mt-2">
+                    <input type="text" id="auth-novo-sku-input" placeholder="Digite o novo SKU..." class="w-full p-3 border-2 rounded-xl">
+                    <button onclick="trocarSkuEProcessarAutorizado()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700">
+                        Trocar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <button onclick="fecharModalAutorizacao()" class="text-gray-500 hover:text-gray-700 font-semibold">
+                Cancelar / Decidir Depois
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MODAL DE SELEÇÃO DE IMPRESSORA (VERSÃO AJUSTADA) -->
+<!-- ================================================================================= -->
+<div id="impressora-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 transform transition-all scale-95 opacity-0" id="impressora-modal-content">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Decisão de Fluxo</h2>
+            <button onclick="fecharModalImpressora()" class="text-gray-500 hover:text-red-600 text-2xl">&times;</button>
+        </div>
+        <p class="text-sm text-gray-600 mb-6">Você selecionou <strong id="impressora-modal-contador">0</strong> item(ns). Decida o destino deles abaixo.</p>
+
+        <!-- Lista de Itens Selecionados -->
+        <div id="impressora-modal-lista-itens" class="mb-6 max-h-48 overflow-y-auto bg-gray-50 p-4 rounded-lg border">
+            <!-- A lista de SKUs será inserida aqui pelo JS -->
+        </div>
+
+        <!-- Ações Disponíveis -->
+        <div class="space-y-6">
+            <!-- Opção 1: Tirar do Estoque -->
+            <div class="bg-teal-50 p-4 rounded-lg border border-teal-200">
+                <h3 class="font-bold text-teal-800 mb-2">Opção 1: Usar Estoque Disponível</h3>
+                <p class="text-xs text-teal-700 mb-3">Clique aqui para mover todos os itens selecionados que possuem estoque para a expedição.</p>
+                <button onclick="tirarSelecionadosDoEstoque()" class="w-full bg-teal-500 text-white p-3 rounded-lg font-semibold hover:bg-teal-600 flex items-center justify-center gap-2">
+                    <i class="fas fa-box-open"></i> Tirar do Estoque e Enviar para Expedição
+                </button>
+            </div>
+
+            <!-- Opção 2: Enviar para Produção -->
+            <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                <h3 class="font-bold text-indigo-800 mb-2">Opção 2: Forçar Produção</h3>
+                <p class="text-xs text-indigo-700 mb-3">Selecione uma impressora para enviar TODOS os itens selecionados para a produção, ignorando o estoque atual.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <button onclick="setImpressora('1')" class="impressora-btn p-4 text-center border-2 rounded-xl hover:bg-indigo-100 hover:border-indigo-500"><i class="fas fa-print text-2xl mb-1"></i><span class="font-semibold text-sm">Imp. 1</span></button>
+                    <button onclick="setImpressora('2')" class="impressora-btn p-4 text-center border-2 rounded-xl hover:bg-indigo-100 hover:border-indigo-500"><i class="fas fa-print text-2xl mb-1"></i><span class="font-semibold text-sm">Imp. 2</span></button>
+                    <button onclick="setImpressora('3')" class="impressora-btn p-4 text-center border-2 rounded-xl hover:bg-indigo-100 hover:border-indigo-500"><i class="fas fa-print text-2xl mb-1"></i><span class="font-semibold text-sm">Imp. 3</span></button>
+                    <button onclick="setImpressora('Lona')" class="impressora-btn p-4 text-center border-2 rounded-xl hover:bg-indigo-100 hover:border-indigo-500"><i class="fas fa-layer-group text-2xl mb-1"></i><span class="font-semibold text-sm">Lona</span></button>
+                </div>
+                <button id="confirmar-impressao-btn" onclick="moverSelecionadosParaProducao(true)" class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:bg-gray-400" disabled>
+                    <i class="fas fa-cogs"></i> Confirmar e Produzir Tudo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- ================================================================================= -->
+<!-- MODAL DE AUTENTICAÇÃO DE ADMIN PARA EDIÇÃO DE SKU -->
+<!-- ================================================================================= -->
+<div id="admin-auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[90] p-4">
+    <div id="admin-auth-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-95 opacity-0">
+        
+        <!-- Cabeçalho do Modal -->
+        <div class="flex flex-col items-center text-center mb-6">
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-shield-alt text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Acesso Restrito</h2>
+            <p class="text-sm text-gray-600 mt-2">A edição de SKU requer permissão de administrador. Por favor, insira a senha para prosseguir.</p>
+        </div>
+
+        <!-- Corpo do Modal (Formulário) -->
+        <div class="space-y-4">
+            <div>
+                <label for="admin-password-input" class="text-sm font-medium text-gray-700">Senha do Administrador</label>
+                <input type="password" id="admin-password-input" placeholder="Digite a senha..." class="w-full p-3 mt-1 border-2 rounded-xl focus:border-yellow-500 transition">
+            </div>
+        </div>
+
+        <!-- Rodapé do Modal (Botões) -->
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <button onclick="cancelarEdicaoSku()" class="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 order-2 sm:order-1">
+                Cancelar
+            </button>
+            <button onclick="validarSenhaEProsseguirEdicao()" class="w-full bg-yellow-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-yellow-600 order-1 sm:order-2">
+                <i class="fas fa-check-circle mr-2"></i>Confirmar e Editar
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================================================================================= -->
+<!-- MODAL DE AUTORIZAÇÃO DE ITEM BLOQUEADO (NOVO) -->
+<!-- ================================================================================= -->
+<div id="autorizacao-item-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[90] p-4">
+    <div id="autorizacao-item-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 transform transition-all scale-95 opacity-0">
+        
+        <!-- Cabeçalho do Modal -->
+        <div class="flex flex-col items-center text-center mb-6">
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-lock text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Item Bloqueado - Autorização Necessária</h2>
+            <p class="text-sm text-gray-600 mt-2">O item <strong id="autorizacao-sku-label" class="text-yellow-700">SKU-A</strong> do pedido <strong id="autorizacao-pedido-label" class="text-yellow-700">#ID-123</strong> está aguardando autorização administrativa para prosseguir.</p>
+        </div>
+
+        <!-- Corpo do Modal (Formulário) -->
+        <div class="space-y-4">
+            <div>
+                <label for="autorizacao-novo-sku-input" class="text-sm font-medium text-gray-700">Novo SKU (Opcional)</label>
+                <input type="text" id="autorizacao-novo-sku-input" placeholder="Deixe em branco para manter o SKU atual" class="w-full p-3 mt-1 border-2 rounded-xl focus:border-yellow-500 transition">
+            </div>
+        </div>
+
+        <!-- Rodapé do Modal (Botões) -->
+        <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <button onclick="fecharModalAutorizacao()" class="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300 order-2 sm:order-1">
+                Cancelar
+            </button>
+            <button onclick="autorizarItemBloqueado(false)" class="w-full bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 order-1 sm:order-2">
+                <i class="fas fa-check-circle mr-2"></i>Autorizar com SKU Atual
+            </button>
+            <button onclick="autorizarItemBloqueado(true)" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 order-1 sm:order-2">
+                <i class="fas fa-exchange-alt mr-2"></i>Alterar e Autorizar SKU
+            </button>
+        </div>
+    </div>
+</div>
+<!-- FIM MODAL DE AUTORIZAÇÃO DE ITEM BLOQUEADO -->
+
+<!-- ================================================================================= -->
+<!-- MODAL DE ATENÇÃO PARA SKU DUPLICADO -->
+<!-- ================================================================================= -->
+ <div id="historico-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col p-8 transform transition-all scale-95 opacity-0" id="historico-modal-content">
+        <div class="flex justify-between items-center mb-4 pb-4 border-b">
+            <h2 class="text-2xl font-bold text-gray-800">Histórico de Pedidos Processados</h2>
+            <button onclick="fecharModalHistorico()" class="text-gray-500 hover:text-red-600 text-3xl">&times;</button>
+        </div>
+        
+        <!-- Filtros do Histórico -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <input type="text" id="hist-filtro-id" placeholder="Filtrar por ID ou SKU..." class="p-2 border rounded-lg">
+            <select id="hist-filtro-marketplace" class="p-2 border rounded-lg">
+                <option value="">Todos Marketplaces</option>
+                <option value="Mercado Livre">Mercado Livre</option>
+                <option value="Shopee">Shopee</option>
+            </select>
+            <input type="text" id="hist-filtro-usuario" placeholder="Filtrar por Usuário..." class="p-2 border rounded-lg">
+            <button onclick="renderizarHistorico()" class="bg-indigo-600 text-white p-2 rounded-lg font-semibold">Aplicar Filtros</button>
+        </div>
+
+        <!-- Tabela do Histórico -->
+        <div class="flex-grow overflow-y-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="sticky top-0 bg-gray-200">
+                    <tr>
+                        <th class="p-2">ID Pedido</th>
+                        <th class="p-2">SKU</th>
+                        <th class="p-2">Marketplace</th>
+                        <th class="p-2">Destino Inicial</th>
+                        <th class="p-2">Usuário</th>
+                        <th class="p-2">Data</th>
+                        <th class="p-2">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="historico-table-body">
+                    <!-- Conteúdo gerado pelo JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+            
+
+
+
+
+<!-- ================================================================================= -->
+<!-- BANCO DE IMAGENS -->
+<!-- ================================================================================= -->
+<div id="banco-imagens" class="hidden content-section fade-in">
+    <h2 class="text-4xl font-bold text-gray-800 mb-8">Banco de Imagens</h2>
+
+    <!-- Campo de Pesquisa -->
+    <div class="bg-white/80 p-6 rounded-2xl shadow-xl mb-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Pesquisar Artes no Servidor</h3>
+        <div class="flex flex-col md:flex-row gap-4 items-start">
+            <div class="flex-grow">
+                <label for="image-search-input" class="text-sm font-medium text-gray-600">
+                    Digite os SKUs das imagens (separados por vírgula, espaço ou quebra de linha):
+                </label>
+                <textarea id="image-search-input" rows="5"
+                          placeholder="Ex: PCRV029, PRDA001, FFDA121, 150498..."
+                          class="w-full p-3 mt-1 border-2 rounded-xl font-mono text-sm focus:border-indigo-500 transition"></textarea>
+            </div>
+            <div class="w-full md:w-auto">
+                 <!-- Espaço reservado para o botão -->
+                 <label class="text-sm font-medium text-gray-600 hidden md:block">&nbsp;</label>
+                <button onclick="procurarImagensServidor()" class="w-full bg-indigo-600 text-white px-8 py-3 mt-1 rounded-xl font-semibold hover:bg-indigo-700 shadow-lg flex items-center justify-center">
+                    <i class="fas fa-search mr-2"></i>Procurar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados da Busca -->
+    <div id="image-results-section" class="hidden">
+        <!-- Seção de Erros (SKUs não encontrados) -->
+        <div id="image-errors-container" class="mb-8">
+            <!-- Erros serão inseridos aqui pelo JS -->
+        </div>
+
+        <!-- Pasta Temporária (Resultados Encontrados) -->
+        <div class="bg-white/80 p-6 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">Artes Encontradas</h3>
+            <div id="image-temp-folder" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <!-- Imagens encontradas serão inseridas aqui -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MÓDULO DE PRODUÇÃO (VERSÃO COM ABAS SEPARADAS) -->
+<!-- ================================================================================= -->
+<div id="producao" class="hidden content-section fade-in">
+    <!-- Cabeçalho -->
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+        <h2 class="text-4xl font-bold text-gray-800">Fila de Produção</h2>
+
+        <div id="producao-data-atualizacao" 
+             class="text-sm text-gray-500 font-medium bg-white/80 px-4 py-2 rounded-lg shadow-md text-right">
+            <!-- A data da última atualização será inserida aqui -->
+        </div>
+
+
+        <div class="flex items-center gap-4 bg-white/80 p-3 rounded-xl shadow-md">
+            <i class="fas fa-cogs text-3xl text-indigo-500"></i>
+            <div class="text-right">
+                <p class="text-3xl font-bold text-indigo-600" id="contador-producao-total">0</p>
+                <p class="text-sm font-semibold uppercase text-gray-500">Itens na Fila</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel de Ações em Massa para Produção -->
+    <div id="producao-painel-acoes" class="sticky top-4 bg-green-700 text-white p-4 rounded-2xl shadow-2xl mb-8 z-30 hidden">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-3">
+            <div>
+                <h3 class="text-lg font-bold">Ação em Massa</h3>
+                <p class="text-sm"><span id="producao-contador-selecionados">0</span> item(ns) selecionado(s) para concluir.</p>
+            </div>
+            <!-- Container para os botões de ação, que serão injetados pelo JS -->
+            <div id="producao-container-botoes" class="flex space-x-4 w-full md:w-auto">
+                <!-- Botões serão injetados aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVEGAÇÃO DAS ABAS COM CONTADORES -->
+    <div class="border-b border-gray-300 mb-6">
+        <nav class="flex space-x-4" aria-label="Tabs">
+            <!-- Aba Mercado Livre -->
+            <button onclick="showProducaoTab('ml')" id="tab-producao-ml" class="producao-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2">
+                <i class="fas fa-store text-yellow-500"></i>
+                <span>Mercado Livre</span>
+                <span id="contador-producao-ml" class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+            <!-- Aba Shopee -->
+            <button onclick="showProducaoTab('shopee')" id="tab-producao-shopee" class="producao-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2">
+                <i class="fas fa-shopping-bag text-orange-500"></i>
+                <span>Shopee</span>
+                <span id="contador-producao-shopee" class="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+            <!-- Aba Pedidos Manuais (VC) -->
+            <button onclick="showProducaoTab('vc')" id="tab-producao-vc" class="producao-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2">
+                <i class="fas fa-user-tag text-cyan-500"></i>
+                <span>Pedidos Manuais (VC)</span>
+                <span id="contador-producao-vc" class="bg-cyan-200 text-cyan-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- CONTEÚDO DAS ABAS -->
+    <div id="producao-tab-content-container">
+        <!-- Conteúdo da Aba Mercado Livre -->
+        <div id="producao-ml-content" class="producao-tab-content space-y-10">
+            <!-- Os grupos de SKU do Mercado Livre serão inseridos aqui -->
+        </div>
+
+        <!-- Conteúdo da Aba Shopee -->
+        <div id="producao-shopee-content" class="producao-tab-content hidden space-y-10">
+            <!-- Os grupos de SKU da Shopee serão inseridos aqui -->
+        </div>
+
+        <!-- Conteúdo da Aba Pedidos Manuais (VC) -->
+        <div id="producao-vc-content" class="producao-tab-content hidden space-y-10">
+            <!-- Os grupos de SKU de Pedidos Manuais serão inseridos aqui -->
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-------------------------------------------------------------------------------------------------------------------------------------->
+
+            <!-- ================================================================================= -->
+<!-- MÓDULO DE COSTURA (VERSÃO COM ABAS SEPARADAS) -->
+<!-- ================================================================================= -->
+<div id="costura" class="hidden content-section fade-in">
+    <!-- Cabeçalho -->
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+        <div class="flex items-center gap-4">
+            <h2 class="text-4xl font-bold text-gray-800">Fila de Costura</h2>
+            <!-- BOTÃO DE ATRIBUIR GRUPOS ADICIONADO AQUI -->
+            <button id="btn-atribuir-grupos-costura" onclick="abrirModalAtribuirGrupos()" class="bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-purple-700 shadow-md hidden">
+                <i class="fas fa-tasks mr-2"></i>Atribuir Grupos
+            </button>
+
+            <div id="costura-data-atualizacao" 
+             class="text-sm text-gray-500 font-medium bg-white/80 px-4 py-2 rounded-lg shadow-md text-right">
+            <!-- A data da última atualização será inserida aqui -->
+        </div>
+
+        </div>
+        <div class="flex items-center gap-4 bg-white/80 p-3 rounded-xl shadow-md">
+            <i class="fas fa-cut text-3xl text-purple-500"></i>
+            <div class="text-right">
+                <p class="text-3xl font-bold text-purple-600" id="contador-costura-total">0</p>
+                <p class="text-sm font-semibold uppercase text-gray-500">Itens na Fila</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel de Ações em Massa para Costura -->
+    <div id="costura-painel-acoes" class="sticky top-4 bg-purple-700 text-white p-4 rounded-2xl shadow-2xl mb-8 z-30 hidden">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-3">
+            <div>
+                <h3 class="text-lg font-bold">Ação em Massa</h3>
+                <p class="text-sm"><span id="costura-contador-selecionados">0</span> item(ns) selecionado(s) para concluir.</p>
+            </div>
+            <button onclick="confirmarConclusaoCostura()" class="bg-white text-purple-800 font-bold px-8 py-3 rounded-xl hover:bg-purple-100 transition-transform hover:scale-105 w-full md:w-auto">
+                <i class="fas fa-check-double mr-2"></i> Mover para Expedição
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVEGAÇÃO DAS ABAS COM CONTADORES -->
+    <div class="border-b border-gray-300 mb-6">
+        <nav class="flex space-x-4" aria-label="Tabs">
+            <!-- Aba Mercado Livre -->
+            <button onclick="showCosturaTab('ml')" id="tab-costura-ml" class="costura-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-purple-600 text-purple-600 flex items-center gap-2">
+                <i class="fas fa-store text-yellow-500"></i>
+                <span>Mercado Livre</span>
+                <span id="contador-costura-ml" class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+            <!-- Aba Shopee -->
+            <button onclick="showCosturaTab('shopee')" id="tab-costura-shopee" class="costura-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2">
+                <i class="fas fa-shopping-bag text-orange-500"></i>
+                <span>Shopee</span>
+                <span id="contador-costura-shopee" class="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+            <!-- Aba Pedidos Manuais (VC) -->
+            <button onclick="showCosturaTab('vc')" id="tab-costura-vc" class="costura-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2">
+                <i class="fas fa-user-tag text-cyan-500"></i>
+                <span>Pedidos Manuais (VC)</span>
+                <span id="contador-costura-vc" class="bg-cyan-200 text-cyan-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- CONTEÚDO DAS ABAS -->
+    <div id="costura-tab-content-container">
+        <!-- Conteúdo da Aba Mercado Livre -->
+        <div id="costura-ml-content" class="costura-tab-content space-y-10">
+            <!-- Os grupos de SKU do Mercado Livre serão inseridos aqui -->
+        </div>
+
+        <!-- Conteúdo da Aba Shopee -->
+        <div id="costura-shopee-content" class="costura-tab-content hidden space-y-10">
+            <!-- Os grupos de SKU da Shopee serão inseridos aqui -->
+        </div>
+
+        <!-- Conteúdo da Aba Pedidos Manuais (VC) -->
+        <div id="costura-vc-content" class="costura-tab-content hidden space-y-10">
+            <!-- Os grupos de SKU de Pedidos Manuais serão inseridos aqui -->
+        </div>
+    </div>
+</div>
+
+            
+            
+
+
+<!-- ================================================================================= -->
+<!-- MODAL DE ATRIBUIÇÃO DE GRUPOS DE COSTURA (PARA ADMINS) -->
+<!-- ================================================================================= -->
+<div id="atribuir-grupos-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 transform transition-all scale-95 opacity-0" id="atribuir-grupos-content">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Atribuir Grupos de Costura</h2>
+            <button onclick="fecharModalAtribuirGrupos()" class="text-gray-500 hover:text-red-600 text-2xl">&times;</button>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label for="atribuir-usuario-select" class="text-sm font-medium text-gray-700">Selecione o Usuário</label>
+                <select id="atribuir-usuario-select" class="w-full p-3 mt-1 border-2 rounded-xl"></select>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-700">Selecione os Grupos Permitidos</label>
+                <div id="grupos-costura-checkboxes" class="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-lg border">
+                    <!-- Checkboxes dos grupos serão inseridos aqui pelo JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <button onclick="salvarAtribuicaoGrupos()" class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700">
+                <i class="fas fa-save mr-2"></i>Salvar Atribuições
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================================= -->
+<!-- SUBSTITUA ESTE BLOCO NO SEU INDEX.HTML -->
+<!-- ================================================================================= -->
+<div id="tarefa-costura-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[80] p-4 backdrop-blur-sm">
+    <div id="tarefa-costura-content" class="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-md p-8 text-center transform transition-all scale-95 opacity-0 relative">
+        
+        <button onclick="pausarEFecharModalCostura()" class="absolute top-4 right-4 text-gray-400 hover:text-red-600 text-2xl font-bold transition-colors">
+            &times;
+        </button>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Controle de Costura</h2>
+        
+        <div class="my-6">
+            <img id="tarefa-imagem-sku" src="" alt="Imagem do SKU" class="w-full h-48 object-cover rounded-xl shadow-lg mx-auto border-4 border-white">
+            
+            <div id="tarefa-info-container" class="flex justify-center items-center gap-4 mt-4 text-sm font-semibold">
+                <!-- O conteúdo (SKU e Marketplace) será preenchido pelo JavaScript -->
+            </div>
+        </div>
+
+        <!-- Seção do cronômetro foi removida -->
+
+        <div class="space-y-3 mt-8">
+            <button id="btn-iniciar-trabalho" onclick="iniciarCronometroETrabalho()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-xl shadow-lg flex items-center justify-center gap-3">
+                <i class="fas fa-play-circle"></i> Iniciar Trabalho
+            </button>
+            
+            <button id="btn-finalizar-costura" onclick="finalizarTarefaCostura()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-lg shadow-lg hidden">
+                <i class="fas fa-flag-checkered mr-2"></i>Finalizar Lote
+            </button>
+
+            <button id="btn-enviar-expedicao" onclick="enviarParaExpedicao()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl text-lg shadow-lg hidden">
+                <i class="fas fa-shipping-fast mr-2"></i>Enviar para Expedição
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- ================================================================================= -->
+<!-- MÓDULO DE EXPEDIÇÃO (VERSÃO COM ABAS) -->
+<!-- ================================================================================= -->
+<div id="expedicao" class="hidden content-section fade-in">
+    <!-- Cabeçalho -->
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+        <h2 class="text-4xl font-bold text-gray-800">Estação de Expedição</h2>
+        <div id="expedicao-data-atualizacao" 
+             class="text-sm text-gray-500 font-medium bg-white/80 px-4 py-2 rounded-lg shadow-md text-right">
+            <!-- A data da última atualização será inserida aqui -->
+        </div>
+
+
+    </div>
+
+    <!-- Bloco de Ações -->
+    <div class="bg-white/80 p-6 rounded-2xl shadow-xl flex flex-col lg:flex-row gap-6 items-center mb-12">
+        <div class="w-full flex flex-col sm:flex-row gap-4">
+            <button onclick="triggerZplUpload()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2" data-permission="expedicao:editar">
+                <i class="fas fa-file-upload"></i> Associar Etiquetas ZPL
+            </button>
+
+            <!-- Botão para associar etiquetas PDF da Shopee -->
+<button onclick="triggerShopeePdfUpload()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2" data-permission="expedicao:editar">
+    <i class="fas fa-file-pdf"></i> Associar Etiquetas PDF (Shopee)
+</button>
+ <!-- ======================= INÍCIO DA ALTERAÇÃO ======================= -->
+        <button onclick="abrirModalHistoricoExpedicao()" class="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2" data-permission="expedicao:gerarRelatorio">
+            <i class="fas fa-history"></i> Histórico de Envios
+        </button>
+        <!-- ======================== FIM DA ALTERAÇÃO ========================= -->
+
+<!-- =================================================================================
+     PAINEL DE AÇÕES EM MASSA (NOVO)
+     ================================================================================= -->
+<div id="expedicao-painel-acoes" class="hidden fixed bottom-5 right-5 bg-white p-4 rounded-xl shadow-2xl border-2 border-blue-500 z-50 animate-fade-in-up">
+    <div class="flex items-center gap-4">
+        <div>
+            <p class="font-bold text-lg text-gray-800">
+                <span id="expedicao-contador-selecionados" class="bg-blue-500 text-white rounded-full px-3 py-1">0</span>
+                pacote(s) selecionado(s)
+            </p>
+        </div>
+        <button onclick="confirmarEnvioExpedicao()" 
+                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-md shadow-lg flex items-center justify-center gap-2"
+                data-permission="expedicao:darBaixa">
+            <i class="fas fa-check-double"></i> Confirmar Envio
+        </button>
+    </div>
+</div>
+
+
+
+
+
+        </div>
+    </div>
+
+
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- NOVO: MODAL DE CONFERÊNCIA DE PACOTE PARA EXPEDIÇÃO -->
+<!-- ================================================================================= -->
+<div id="conferencia-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[95] p-4 backdrop-blur-sm">
+    <div id="conferencia-modal-content" class="bg-gray-100 rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all scale-95 opacity-0">
+        <!-- Cabeçalho do Modal -->
+        <div class="p-6 border-b bg-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                    <i class="fas fa-clipboard-check text-blue-500"></i>
+                    Conferência Final do Pacote
+                </h2>
+                <button onclick="fecharModalConferencia()" class="text-gray-400 hover:text-red-500 text-3xl">&times;</button>
+            </div>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="p-6 space-y-6">
+            <!-- Informações Gerais do Pedido -->
+            <div id="conferencia-pedido-info">
+                <!-- As informações do pedido (ID, Cliente, etc.) serão inseridas aqui -->
+            </div>
+
+            <!-- Lista de Itens a Serem Conferidos -->
+            <div>
+                <h3 class="font-semibold text-lg text-gray-700 mb-3">Itens no Pacote:</h3>
+                <div id="conferencia-lista-itens" class="space-y-3 max-h-64 overflow-y-auto pr-2">
+                    <!-- A lista de SKUs, quantidades e fotos será inserida aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Rodapé com Ações -->
+        <div id="conferencia-modal-footer" class="bg-gray-200 p-6 rounded-b-2xl">
+            <!-- O botão de confirmação será inserido aqui -->
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+    <!-- Modal de Conferência de Pacote (Múltiplos SKUs) -->
+<div id="conferencia-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+    <div id="conferencia-modal-content" class="bg-gray-100 rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all scale-95 opacity-0">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-3"><i class="fas fa-clipboard-check text-blue-500"></i>Conferência de Pacote</h2>
+                <button onclick="fecharModalConferencia()" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+
+            <!-- Informações Gerais do Pedido -->
+            <div id="conferencia-pedido-info" class="mb-6"></div>
+
+            <!-- Lista de Itens a Serem Conferidos -->
+            <h3 class="font-semibold text-lg text-gray-700 mb-3">Itens no Pacote:</h3>
+            <div id="conferencia-lista-itens" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                <!-- Itens serão injetados aqui via JavaScript -->
+            </div>
+        </div>
+
+        <!-- Rodapé com Ações -->
+        <div id="conferencia-modal-footer" class="bg-gray-200 p-6 rounded-b-2xl grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Botões de ação serão injetados aqui -->
+        </div>
+    </div>
+</div>
+
+    <!-- Seção de Pacotes Prontos para Envio -->
+    <div id="expedicao-prontos-section">
+        <h3 class="text-3xl font-bold text-green-600 mb-6 flex items-center gap-3"><i class="fas fa-check-circle"></i> Pacotes Prontos para Montar</h3>
+
+        <!-- NAVEGAÇÃO DAS ABAS DA EXPEDIÇÃO -->
+        <div class="border-b border-gray-300 mb-6">
+            <nav class="flex space-x-4" aria-label="Tabs">
+                <button onclick="showExpedicaoTab('ml')" id="tab-expedicao-ml" class="expedicao-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-blue-600 text-blue-600 flex items-center gap-2">
+                    <i class="fas fa-store text-yellow-500"></i>
+                    <span>Mercado Livre</span>
+                    <span id="contador-expedicao-ml" class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </button>
+                <button onclick="showExpedicaoTab('shopee')" id="tab-expedicao-shopee" class="expedicao-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-shopping-bag text-orange-500"></i>
+                    <span>Shopee</span>
+                    <span id="contador-expedicao-shopee" class="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </button>
+                <button onclick="showExpedicaoTab('vc')" id="tab-expedicao-vc" class="expedicao-tab-btn px-4 py-3 font-semibold text-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+                    <i class="fas fa-user-tag text-cyan-500"></i>
+                    <span>Pedidos Manuais (VC)</span>
+                    <span id="contador-expedicao-vc" class="bg-cyan-200 text-cyan-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- CONTEÚDO DAS ABAS DA EXPEDIÇÃO -->
+        <div id="expedicao-tab-content-container">
+            <!-- Conteúdo da Aba Mercado Livre -->
+            <div id="expedicao-ml-content" class="expedicao-tab-content space-y-12">
+                <!-- Cards do ML serão inseridos aqui -->
+            </div>
+            <!-- Conteúdo da Aba Shopee -->
+            <div id="expedicao-shopee-content" class="expedicao-tab-content hidden space-y-12">
+                <!-- Cards da Shopee serão inseridos aqui -->
+            </div>
+            <!-- Conteúdo da Aba Pedidos Manuais (VC) -->
+            <div id="expedicao-vc-content" class="expedicao-tab-content hidden space-y-12">
+                <!-- Cards de VC serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Pacotes Aguardando Itens (permanece a mesma) -->
+    <div id="expedicao-aguardando-section" class="mt-16">
+        <h3 class="text-3xl font-bold text-yellow-600 mb-6 flex items-center gap-3"><i class="fas fa-hourglass-half"></i> Aguardando Itens Faltantes</h3>
+        <div id="expedicao-incompletos-container" class="space-y-12">
+             <p class="text-center text-gray-500 py-8">Nenhum pacote aguardando itens.</p>
+        </div>
+    </div>
+    
+    <!-- MODAL DE CONFERÊNCIA (permanece o mesmo) -->
+    <div id="conferencia-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[80] p-4">
+        <div id="conferencia-modal-content" class="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-3xl transform transition-all scale-95 opacity-0">
+            <div class="p-6 border-b flex justify-between items-center" id="conferencia-modal-header">
+                <h2 class="text-2xl font-bold flex items-center gap-3"><i class="fas fa-box-check"></i> Conferir Pacote</h2>
+                <button onclick="fecharModalConferencia()" class="text-gray-500 hover:text-red-600 text-2xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <div id="conferencia-pedido-info" class="space-y-4"></div>
+                <h3 class="font-bold text-gray-700 mt-6 mb-3">Itens do Pacote:</h3>
+                <div id="conferencia-lista-itens" class="space-y-2 max-h-48 overflow-y-auto bg-white p-4 rounded-lg border"></div>
+            </div>
+            <div class="p-6 bg-gray-100 rounded-b-2xl flex flex-col gap-3" id="conferencia-modal-footer"></div>
+        </div>
+    </div>
+</div>
+
+<!-- index.html (substitua o modal 'associacao-visual-modal' por este) -->
+
+<!-- ================================================================================= -->
+<!-- MODAL DE ASSOCIAÇÃO VISUAL (VERSÃO COM NAVEGAÇÃO E DOWNLOAD INDIVIDUAL) -->
+<!-- ================================================================================= -->
+<div id="associacao-visual-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[90] p-4 backdrop-blur-sm">
+    <div class="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col p-6">
+        <!-- Cabeçalho do Modal -->
+        <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Associar Etiqueta ao Pacote</h2>
+                <p id="associacao-modal-status" class="text-sm text-gray-600 font-medium"></p>
+            </div>
+            <button onclick="fecharModalAssociacaoVisual()" class="text-gray-500 hover:text-red-600 text-3xl">&times;</button>
+        </div>
+        
+        <!-- Corpo do Modal -->
+        <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
+            <!-- Coluna da Esquerda: Pré-visualização da Etiqueta com Navegação -->
+            <div class="flex flex-col bg-white border rounded-lg p-2">
+                <div id="associacao-etiqueta-preview" class="flex-grow overflow-auto flex items-center justify-center relative">
+                    <!-- A imagem da etiqueta será inserida aqui -->
+                </div>
+                <!-- BOTÕES DE NAVEGAÇÃO DA ETIQUETA -->
+                <div class="flex justify-between items-center p-2 mt-2 border-t">
+                    <button id="btn-etiqueta-anterior" onclick="navegarEtiqueta(-1)" class="bg-gray-200 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 disabled:opacity-50">
+                        <i class="fas fa-arrow-left mr-2"></i>Anterior
+                    </button>
+                    <span id="contador-paginas-etiqueta" class="font-semibold text-gray-700"></span>
+                    <button id="btn-etiqueta-proxima" onclick="navegarEtiqueta(1)" class="bg-gray-200 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 disabled:opacity-50">
+                        Próxima<i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Coluna da Direita: Lista de Pacotes -->
+            <div class="flex flex-col bg-white border rounded-lg p-2">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2 text-center">Pacotes Aguardando Etiqueta</h3>
+                <div id="associacao-lista-pacotes" class="flex-grow p-2 space-y-2 overflow-y-auto">
+                    <!-- A lista de botões de pacotes será inserida aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- MODAL DE HISTÓRICO DE EXPEDIÇÃO (VERSÃO 2.0 - OTIMIZADA COM ABAS) -->
+<!-- ================================================================================= -->
+<div id="historico-expedicao-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col p-6">
+        <!-- Cabeçalho do Modal -->
+        <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-history text-2xl text-blue-600"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Histórico de Envios da Expedição</h2>
+            </div>
+            <button onclick="fecharModalHistoricoExpedicao()" class="text-gray-500 hover:text-red-600 text-3xl">&times;</button>
+        </div>
+
+        <!-- Filtros Gerais -->
+        <div class="bg-gray-50 p-4 rounded-xl mb-4 flex-shrink-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <input type="text" id="hist-exp-filter-id" placeholder="Filtrar por Pedido ID ou SKU..." class="w-full p-3 border-2 rounded-xl">
+                <input type="text" id="hist-exp-filter-user" placeholder="Filtrar por Usuário..." class="w-full p-3 border-2 rounded-xl">
+                <input type="date" id="hist-exp-filter-data-inicio" class="w-full p-3 border-2 rounded-xl text-gray-500" title="Data de Início">
+                <button onclick="renderizarHistoricoExpedicao()" class="w-full bg-blue-600 text-white p-3 rounded-xl font-semibold hover:bg-blue-700">
+                    <i class="fas fa-filter mr-2"></i>Aplicar Filtros
+                </button>
+            </div>
+        </div>
+        
+        
+
+        <!-- Abas de Marketplace -->
+        <div class="border-b border-gray-300 mb-4 flex-shrink-0">
+            <nav id="hist-exp-tabs" class="flex space-x-4" aria-label="Tabs">
+                <!-- As abas serão geradas pelo JavaScript -->
+            </nav>
+        </div>
+
+        <!-- Conteúdo das Abas (com scroll) -->
+        <div id="hist-exp-tab-content" class="flex-grow overflow-y-auto">
+            <!-- O conteúdo da aba ativa será inserido aqui pelo JavaScript -->
+        </div>
+    </div>
+</div>
+
+
+
+
+
+            <!-- System Logs -->
+<div id="system-logs" class="hidden content-section fade-in">
+    <h2 class="text-4xl font-bold text-gray-800 mb-8">Logs do Sistema (Auditoria)</h2>
+
+    <!-- Filtros Avançados -->
+    <div class="bg-white/80 p-6 rounded-2xl shadow-xl mb-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Filtrar Registros</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div>
+                <label for="log-filter-usuario" class="text-sm font-medium text-gray-600">Usuário</label>
+                <input type="text" id="log-filter-usuario" placeholder="Nome do usuário..." class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+            <div>
+                <label for="log-filter-modulo" class="text-sm font-medium text-gray-600">Módulo</label>
+                <select id="log-filter-modulo" class="w-full p-3 mt-1 border-2 rounded-xl">
+                    <option value="">Todos</option>
+                    <option value="Login">Login/Sessão</option>
+                    <option value="Estoque">Estoque</option>
+                    <option value="Pedidos">Pedidos</option>
+                    <option value="Produção">Produção</option>
+                    <option value="Costura">Costura</option>
+                    <option value="Expedição">Expedição</option>
+                    <option value="Usuários">Gestão de Usuários</option>
+                    <option value="Chat">Chat</option>
+                </select>
+            </div>
+            <div>
+                <label for="log-filter-data-inicio" class="text-sm font-medium text-gray-600">Data Início</label>
+                <input type="date" id="log-filter-data-inicio" class="w-full p-3 mt-1 border-2 rounded-xl text-gray-500">
+            </div>
+            <div>
+                <label for="log-filter-data-fim" class="text-sm font-medium text-gray-600">Data Fim</label>
+                <input type="date" id="log-filter-data-fim" class="w-full p-3 mt-1 border-2 rounded-xl text-gray-500">
+            </div>
+            <button onclick="renderSystemLogs()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-semibold hover:bg-indigo-700">
+                <i class="fas fa-filter mr-2"></i>Aplicar Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabela de Logs -->
+    <div class="bg-white/80 p-6 rounded-2xl shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Registros de Atividade</h3>
+            <div id="log-pagination-info" class="text-sm font-medium text-gray-600"></div>
+        </div>
+        <div class="table-container max-h-[60vh]">
+            <table class="w-full min-w-[800px]">
+                <thead class="sticky top-0 bg-gray-100 z-10">
+                    <tr class="border-b">
+                        <th class="p-3 text-left text-sm font-semibold text-gray-600">Data/Hora</th>
+                        <th class="p-3 text-left text-sm font-semibold text-gray-600">Usuário</th>
+                        <th class="p-3 text-left text-sm font-semibold text-gray-600">Módulo</th>
+                        <th class="p-3 text-left text-sm font-semibold text-gray-600">Ação</th>
+                        <th class="p-3 text-left text-sm font-semibold text-gray-600">Detalhes</th>
+                    </tr>
+                </thead>
+                <tbody id="system-logs-tbody">
+                    <!-- Linhas de log serão inseridas aqui -->
+                </tbody>
+            </table>
+        </div>
+        <div id="log-pagination-controls" class="flex justify-center items-center mt-4 space-x-4">
+            <!-- Controles de paginação serão inseridos aqui -->
+        </div>
+    </div>
+</div>
+
+
+
+<!-- ================================================================================= -->
+<!-- MÓDULO GESTÃO DE EANS (VERSÃO 7.1 - COM CONTROLE DE ACESSO POR PERMISSÃO)     -->
+<!-- ================================================================================= -->
+<div id="processador-eans" class="hidden content-section fade-in">
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+        <h2 class="text-4xl font-bold text-gray-800">Matriz de Controle de EANs</h2>
+        <div class="bg-white/80 p-3 rounded-xl shadow-md text-right">
+            <p class="text-3xl font-bold text-indigo-600" id="ean-total-count">0</p>
+            <p class="text-sm font-semibold uppercase text-gray-500">Total de Itens Cadastrados</p>
+        </div>
+    </div>
+
+    <!-- SEÇÃO DE BUSCA GERAL (Visível para todos com acesso ao módulo) -->
+    <div class="bg-white/80 p-8 rounded-2xl shadow-xl mb-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+            <i class="fas fa-globe-americas text-indigo-500"></i>
+            Busca Geral em Todas as Lojas
+        </h3>
+        <p class="text-sm text-gray-600 mb-4">
+            Procure por um SKU ou EAN em todas as lojas simultaneamente. Esta busca é apenas para consulta.
+        </p>
+        <div class="flex items-center gap-4">
+            <div class="relative flex-grow">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="ean-busca-geral-input" placeholder="Digite o SKU ou EAN para buscar..." class="w-full p-4 pl-12 border-2 rounded-xl focus:border-indigo-500 transition">
+            </div>
+            <button onclick="executarBuscaGeralEAN()" class="bg-indigo-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-indigo-700 shadow-lg">
+                Buscar
+            </button>
+        </div>
+        <div id="ean-busca-geral-resultados" class="mt-6"></div>
+    </div>
+
+    <!-- ================================================================================= -->
+    <!-- CONTAINER DE CONTEÚDO RESTRITO (Visível apenas para quem pode processar/editar) -->
+    <!-- ================================================================================= -->
+    <div id="ean-conteudo-restrito">
+        
+        <!-- ÁREA DE IMPORTAÇÃO DE DADOS -->
+        <div class="bg-white/80 p-8 rounded-2xl shadow-xl mb-8" data-permission="processadorEANs:processar">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Importar Novos Itens</h3>
+            <p class="text-sm text-gray-600 mb-4">Cole os dados no formato <strong>SKU [espaço] EAN</strong>.</p>
+            <div class="flex flex-col md:flex-row gap-4">
+                <textarea id="ean-input" rows="8" placeholder="VCSE010-VF 7900315412709&#10;PCRV029-F 9023232143124" class="w-full p-4 border-2 rounded-xl font-mono text-sm flex-grow"></textarea>
+                <button onclick="processarEANs()" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 shadow-lg self-start">
+                    <i class="fas fa-cogs mr-2"></i>Processar e Adicionar
+                </button>
+            </div>
+        </div>
+
+         <!-- ================================================================= -->
+        <!-- SEÇÃO DE DOWNLOAD DE RELATÓRIO PDF (CORREÇÃO APLICADA AQUI)     -->
+        <!-- ================================================================= -->
+        <div class="bg-white/80 p-8 rounded-2xl shadow-xl mb-8" data-permission="processadorEANs:processar">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Baixar Relatório de EANs (PDF)</h3>
+            <p class="text-sm text-gray-600 mb-4">Selecione os filtros para gerar um relatório em PDF com os EANs cadastrados e não cadastrados de uma loja específica.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <!-- Filtro de Loja -->
+                <div>
+                    <label for="pdf-filtro-loja" class="text-sm font-medium text-gray-700">Loja</label>
+                    <select id="pdf-filtro-loja" class="w-full p-3 mt-1 border-2 rounded-xl">
+                        <option value="loja-outros">Loja 1</option>
+                        <option value="loja-f">Loja 2 (-F)</option>
+                        <option value="loja-p">Loja 3 (-P)</option>
+                        <option value="loja-v">Loja 4 (-V)</option>
+                        <option value="loja-c">Loja 5 (-C)</option>
+                    </select>
+                </div>
+
+                <!-- Filtro de Marketplace -->
+                <div>
+                    <label for="pdf-filtro-marketplace" class="text-sm font-medium text-gray-700">Marketplace</label>
+                    <select id="pdf-filtro-marketplace" class="w-full p-3 mt-1 border-2 rounded-xl">
+                        <option value="Allmarket">Todos</option>
+                        <option value="MERCADO">Mercado Livre</option>
+                        <option value="SHOPEE">Shopee</option>
+                        <option value="MAGALU">Magalu</option>
+                        <option value="SHEIN">Shein</option>
+                        <option value="SITE">Site</option>
+                    </select>
+                </div>
+
+                <!-- Filtro de Status -->
+                <div>
+                    <label for="pdf-filtro-status" class="text-sm font-medium text-gray-700">Status</label>
+                    <select id="pdf-filtro-status" class="w-full p-3 mt-1 border-2 rounded-xl">
+                        <option value="todos">Todos</option>
+                        <option value="cadastrados">Apenas Cadastrados</option>
+                        <option value="nao_cadastrados">Não Cadastrados</option>
+                    </select>
+                </div>
+
+                <!-- NOVO FILTRO DE SKU (PREFIXO) -->
+                <div>
+                    <label for="pdf-filtro-sku" class="text-sm font-medium text-gray-700">Prefixo do SKU</label>
+                    <input type="text" id="pdf-filtro-sku" placeholder="Ex: PR, PC, KD..." class="w-full p-3 mt-1 border-2 rounded-xl uppercase">
+                </div>
+            </div>
+            <div class="mt-4">
+                <button onclick="gerarRelatorioEANsPDF()" class="w-full md:w-auto bg-red-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-red-700 shadow-lg">
+                    <i class="fas fa-file-pdf mr-2"></i>Baixar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- NAVEGAÇÃO POR ABAS DE LOJA -->
+        <div class="border-b border-gray-300 mb-6">
+            <nav id="ean-loja-tabs" class="flex space-x-1" aria-label="Tabs"></nav>
+        </div>
+
+        <!-- CONTEÚDO DAS ABAS (BUSCA E RESULTADOS) -->
+        <div id="ean-tab-content-container">
+            <!-- O conteúdo de cada aba será gerado dinamicamente -->
+        </div>
+
+        
+    </div>
+</div>
+
+
+<!-- ================================================================================= -->
+<!-- MODAL PARA EDIÇÃO DE EAN (VERSÃO COMPLETA)                                      -->
+<!-- ================================================================================= -->
+<div id="edit-ean-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[90] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Editar Item</h2>
+        <!-- --- ALTERAÇÃO APLICADA AQUI --- -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="edit-sku-input" class="text-sm font-medium">SKU</label>
+                <input type="text" id="edit-sku-input" class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+            <div>
+                <label for="edit-ean-input" class="text-sm font-medium">EAN</label>
+                <input type="text" id="edit-ean-input" class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+            <div>
+                <label for="edit-peso-input" class="text-sm font-medium">Peso (ex: 1,500kg)</label>
+                <input type="text" id="edit-peso-input" class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+            <div>
+                <label for="edit-ncm-input" class="text-sm font-medium">NCM</label>
+                <input type="text" id="edit-ncm-input" class="w-full p-3 mt-1 border-2 rounded-xl">
+            </div>
+        </div>
+        <div class="mt-8 flex justify-end gap-4">
+            <button onclick="fecharModalEdicaoEAN()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg">Cancelar</button>
+            <button onclick="salvarEdicaoEAN()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+            
+            <!-- Tela para usuário sem permissão -->
+            <div id="no-permission" class="hidden content-section fade-in text-center">
+                <h2 class="text-2xl font-bold text-gray-700">Acesso Negado</h2>
+                <p class="text-gray-500 mt-2">Você não tem permissão para visualizar nenhuma seção. Por favor, contate um administrador.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Cadastro Avançado -->
+    <div id="advanced-registration-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-8 transform transition-all scale-95 opacity-0" id="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Cadastro Avançado de Itens</h2>
+                <button onclick="closeAdvancedRegistrationModal()" class="text-gray-500 hover:text-red-600 text-2xl">&times;</button>
+            </div>
+            
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                Adicione múltiplas linhas para cadastrar vários SKUs de uma vez, com prateleiras e quantidades diferentes.
+            </div>
+
+            <div id="advanced-form-container" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                <div>
+                    <h3>SKU</h3>
+                </div>
+                <!-- Linhas de formulário serão adicionadas aqui pelo JS -->
+            </div>
+
+            <div class="mt-6 flex justify-between">
+                <button onclick="addRegistrationRow()" class="bg-gray-200 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-300">
+                    <i class="fas fa-plus mr-2"></i>Adicionar Linha
+                </button>
+                <button onclick="processAdvancedRegistration()" class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700">
+                    Cadastrar Itens
+                </button>
+            </div>
+        </div>
+    </div>
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- MODAL DE ZOOM DE IMAGEM -->
+<!-- ================================================================================= -->
+<div id="image-zoom-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden" onclick="closeImageZoomModal()">
+    <div class="p-4 bg-white rounded-lg shadow-2xl max-w-3xl max-h-[90vh] relative" onclick="event.stopPropagation()">
+        <img id="zoomed-image" src="" alt="Imagem Ampliada" class="object-contain max-w-full max-h-[85vh]">
+        <button onclick="closeImageZoomModal()" class="absolute -top-4 -right-4 bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold shadow-lg hover:bg-red-700">
+            &times;
+        </button>
+    </div>
+</div>
+
+
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- NOVO MODAL DE EXCLUSÃO DE ESTOQUE COM SENHA (MAIS APRESENTÁVEL) -->
+<!-- ================================================================================= -->
+<div id="clear-stock-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[90] p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 transform transition-all scale-95 opacity-0" id="clear-stock-modal-content">
+        
+        <!-- Cabeçalho -->
+        <div class="flex flex-col items-center text-center mb-6">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-exclamation-triangle text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Confirmação de Exclusão de Estoque</h2>
+            <p class="text-sm text-gray-600 mt-2">Esta é uma <b>Ação Irreversível</b>. Requer sua senha e confirmação final.</p>
+        </div>
+
+        <!-- Mensagem de Alerta e Detalhes da Ação -->
+        <div id="clear-stock-details" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 font-medium">
+            <!-- Detalhes da ação (TOTAL ou PREFIXO) serão injetados aqui pelo JS -->
+        </div>
+
+        <!-- Formulário de Confirmação -->
+        <div class="space-y-4">
+            <!-- Campo de Senha -->
+            <div>
+                <label for="clear-stock-password" class="block text-sm font-medium text-gray-700">
+                    Senha para excluir o estoque:
+                </label>
+                <input type="password" id="clear-stock-password" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-red-500 transition" placeholder="Digite sua senha...">
+            </div>
+
+            <!-- Campo de Confirmação por Digitação -->
+            <div>
+                <label for="clear-stock-confirmation" class="block text-sm font-medium text-gray-700">
+                    Para confirmar, digite a palavra <strong id="clear-stock-keyword" class="text-red-600">EXCLUIR</strong> no campo abaixo:
+                </label>
+                <input type="text" id="clear-stock-confirmation" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-red-500 transition" placeholder="Digite a palavra de confirmação...">
+            </div>
+        </div>
+
+        <!-- Rodapé com Botões -->
+        <div class="mt-8 flex justify-end gap-4">
+            <button onclick="closeClearStockModal()" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-300">
+                Cancelar
+            </button>
+            <button id="confirm-clear-stock-btn" onclick="executeClearStock()" class="bg-red-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-trash-alt mr-2"></i>Confirmar Exclusão
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- index.html -->
+
+<!-- ================================================================================= -->
+<!-- NOVO MODAL DE ASSOCIAÇÃO VISUAL DE ETIQUETA -->
+<!-- ================================================================================= -->
+<div id="associacao-visual-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[90] p-4 backdrop-blur-sm">
+    <div class="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col p-6">
+        <!-- Cabeçalho do Modal -->
+        <div class="flex justify-between items-center mb-4 pb-4 border-b flex-shrink-0">
+            <h2 class="text-2xl font-bold text-gray-800">Associar Etiqueta ao Pacote</h2>
+            <button onclick="fecharModalAssociacaoVisual()" class="text-gray-500 hover:text-red-600 text-3xl">&times;</button>
+        </div>
+        
+        <p id="associacao-modal-status" class="text-center font-medium text-gray-600 mb-4"></p>
+
+        <!-- Corpo do Modal -->
+        <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
+            <!-- Coluna da Esquerda: Pré-visualização da Etiqueta -->
+            <div class="flex flex-col">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2 text-center">Etiqueta Carregada</h3>
+                <div id="associacao-etiqueta-preview" class="flex-grow bg-white border rounded-lg p-2 overflow-auto flex items-center justify-center">
+                    <!-- A imagem da etiqueta será inserida aqui -->
+                </div>
+            </div>
+
+            <!-- Coluna da Direita: Lista de Pacotes -->
+            <div class="flex flex-col">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2 text-center">Pacotes Aguardando Etiqueta</h3>
+                <div id="associacao-lista-pacotes" class="flex-grow bg-white border rounded-lg p-4 space-y-2 overflow-y-auto">
+                    <!-- A lista de botões de pacotes será inserida aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+    </main>
+</div>
+
+
+
+
+
+
+
+
+
+
+<!-- Módulos do Sistema (12 arquivos: 1 core + 11 módulos) -->
+<script src="{{ url_for('static', filename='00-core.js') }}"></script>
+<script src="{{ url_for('static', filename='01-dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='02-gestao-usuarios.js') }}"></script>
+<script src="{{ url_for('static', filename='03-logs-sistema.js') }}"></script>
+<script src="{{ url_for('static', filename='04-chat-interno.js') }}"></script>
+<script src="{{ url_for('static', filename='05-processador-eans.js') }}"></script>
+<script src="{{ url_for('static', filename='06-estoque.js') }}"></script>
+<script src="{{ url_for('static', filename='07-pedidos.js') }}"></script>
+<script src="{{ url_for('static', filename='08-banco-imagens.js') }}"></script>
+<script src="{{ url_for('static', filename='09-producao.js') }}"></script>
+<script src="{{ url_for('static', filename='10-costura.js') }}"></script>
+<script src="{{ url_for('static', filename='11-expedicao.js') }}"></script>
+</body>
+</html>
